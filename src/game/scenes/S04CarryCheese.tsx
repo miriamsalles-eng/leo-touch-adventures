@@ -4,7 +4,6 @@ import { BACKGROUNDS, OBJECTS } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
-import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -14,80 +13,109 @@ const A = ACTIVITIES[3]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
-type Step = "idle" | "holding" | "over" | "done";
+/** Three rounds with different drag directions: right, left and upwards. */
+const ROUNDS = [
+  { item: { x: 300, y: 520 }, leo: { x: 1000, y: 620 }, hint: "Arraste o queijo até o Leo." },
+  { item: { x: 1010, y: 300 }, leo: { x: 300, y: 620 }, hint: "Agora arraste para a esquerda." },
+  { item: { x: 660, y: 610 }, leo: { x: 660, y: 330 }, hint: "Agora arraste para cima." },
+];
 
-/** Activity 3 — drag with explicit micro-steps: pick up, carry, release. */
-export function S04CarryCheese({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
-  const leo = { x: 950, y: 430 };
+type Step = "idle" | "holding" | "over" | "round-done";
+
+export function S04CarryCheese({
+  onComplete,
+  progress,
+}: {
+  onComplete: () => void;
+  progress: { total: number; current: number };
+}) {
+  const [round, setRound] = useState(0);
   const [step, setStep] = useState<Step>("idle");
+  const [done, setDone] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
-  const message =
-    step === "idle"
-      ? "Arraste o queijo até o Leo."
+  const r = ROUNDS[round]!;
+  const target = { x: r.leo.x, y: r.leo.y - 150 };
+
+  const bubble =
+    done
+      ? "Você arrastou e soltou!"
       : step === "holding"
-        ? "Agora leve até Leo sem soltar."
+        ? "Agora leve até o Leo sem soltar."
         : step === "over"
           ? "Agora solte!"
-          : "Obrigado! Que delícia!";
+          : r.hint;
 
   return (
-    <SceneFrame background={BACKGROUNDS.garden} progress={progress}>
+    <SceneFrame
+      background={BACKGROUNDS.bedroom}
+      progress={progress}
+      onNext={done ? onComplete : undefined}
+    >
+      <Character
+        state={done ? "celebrating" : step === "over" ? "happy" : "pointing"}
+        x={r.leo.x}
+        y={r.leo.y}
+        height={320}
+        bob={step === "idle"}
+      />
+
       <DropZone
         id="leo"
-        x={leo.x}
-        y={leo.y}
+        x={target.x}
+        y={target.y}
         w={230}
         h={230}
         tolerance="overlap"
         padding={PADDING}
-        enabled={step !== "done"}
+        enabled={!done}
         active={step === "over"}
-        showTarget={step !== "done"}
-      />
-      <Character state={step === "done" ? "with-cheese" : "pointing"} x={leo.x} y={leo.y + 250} height={330} bob={step === "done"} />
-      <SpeechBubble
-        text={message}
-        anchorX={leo.x}
-        anchorY={leo.y - 120}
-        anchorWidth={280}
-        side="left"
-        width={360}
-        tone={step === "done" ? "cheer" : "normal"}
+        showTarget={!done}
       />
 
-      {step !== "done" && (
+      {!done && (
         <DragItem
+          key={round}
           image={OBJECTS.cheese}
-          start={{ x: 280, y: 470 }}
+          start={r.item}
           size={SIZE}
           label="queijo"
           onPickup={() => {
-            setStep("holding");
             play("pick");
+            setStep("holding");
           }}
-          onZoneChange={(z) => setStep(z ? "over" : "holding")}
+          onZoneChange={(zone) => setStep(zone === "leo" ? "over" : "holding")}
           onDrop={(zone) => {
-            if (zone === "leo") {
-              setStep("done");
-              play("success");
-              show(FEEDBACK.did, "success", 2200);
-              return { x: leo.x - 40, y: leo.y + 40 };
+            if (zone !== "leo") {
+              show(FEEDBACK.holding, "gentle");
+              setStep("idle");
+              return "return";
             }
-            setStep("idle");
-            show(FEEDBACK.holding, "gentle");
-            return "return";
+            play("success");
+            if (round < ROUNDS.length - 1) {
+              show(FEEDBACK.yes, "success");
+              setStep("idle");
+              setRound((n) => n + 1);
+              return "return";
+            }
+            show(FEEDBACK.did, "success");
+            setStep("round-done");
+            setDone(true);
+            return { x: target.x, y: target.y };
           }}
         />
       )}
 
+      <SpeechBubble
+        text={bubble}
+        anchorX={r.leo.x}
+        anchorY={r.leo.y - 300}
+        anchorWidth={230}
+        side="auto"
+        tone={done || step === "over" ? "cheer" : "normal"}
+      />
       <FeedbackPopup message={feedback} />
-      {step === "done" && (
-        <div className="absolute left-[300px] top-[620px] -translate-x-1/2">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }

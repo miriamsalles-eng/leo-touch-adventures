@@ -127,7 +127,7 @@ export function PathScene({
 
       <FeedbackPopup message={feedback} />
       {done && (
-        <div className="absolute left-1/2 top-[640px] -translate-x-1/2">
+        <div className="absolute right-8 top-[618px] z-40">
           <GameButton onPress={onComplete}>SEGUIR</GameButton>
         </div>
       )}

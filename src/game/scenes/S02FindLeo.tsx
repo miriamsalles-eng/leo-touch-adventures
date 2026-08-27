@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
 import { BACKGROUNDS } from "../assets";
 import { Character } from "../components/Character";
-import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -10,64 +9,84 @@ import { distance, usePointerTracking } from "../hooks/usePointerTracking";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[1]!;
-const HOVER_RADIUS = A.params!["hoverRadius"] as number;
-const DWELL_MS = A.params!["dwellMs"] as number;
+const RADIUS = A.params!["hoverRadius"] as number;
+const DWELL = A.params!["dwellMs"] as number;
 
-/** Activity 1 — move only, no click. Success after dwelling ~800ms on Leo. */
-export function S02FindLeo({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
-  const leo = { x: 880, y: 420 };
-  const { point } = usePointerTracking();
+/** Three short rounds: Leo appears in a different spot each time. */
+const ROUNDS = [
+  { x: 940, y: 560, hint: "Leve a setinha até o Leo." },
+  { x: 300, y: 520, hint: "Agora o Leo está aqui!" },
+  { x: 660, y: 460, hint: "Mais uma vez: até o Leo." },
+];
+
+export function S02FindLeo({
+  onComplete,
+  progress,
+}: {
+  onComplete: () => void;
+  progress: { total: number; current: number };
+}) {
+  const [round, setRound] = useState(0);
   const [hover, setHover] = useState(false);
   const [done, setDone] = useState(false);
+  const { point } = usePointerTracking(!done);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const near = !!point && distance(point, leo) < HOVER_RADIUS;
+  const spot = ROUNDS[round]!;
 
   useEffect(() => {
-    setHover(near);
     if (done) return;
-    if (near) {
-      timer.current = setTimeout(() => {
-        setDone(true);
-        play("success");
-        show(FEEDBACK.did, "success", 2200);
-      }, DWELL_MS);
+    const near = point ? distance(point, { x: spot.x, y: spot.y - 130 }) < RADIUS : false;
+    setHover(near);
+    if (!near) {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
+      return;
     }
+    if (timer.current) return;
+    timer.current = setTimeout(() => {
+      play("success");
+      if (round < ROUNDS.length - 1) {
+        show(FEEDBACK.yes, "success");
+        setRound((r) => r + 1);
+        setHover(false);
+      } else {
+        show(FEEDBACK.did, "success");
+        setDone(true);
+      }
+      timer.current = null;
+    }, DWELL);
     return () => {
       if (timer.current) clearTimeout(timer.current);
+      timer.current = null;
     };
-  }, [near, done, play, show]);
+  }, [point, done, round, spot.x, spot.y, play, show]);
 
   return (
-    <SceneFrame background={BACKGROUNDS.bedroom} progress={progress}>
-      {hover && !done && (
-        <div
-          className="pointer-events-none absolute rounded-full bg-[var(--highlight-soft)] blur-xl"
-          style={{ left: leo.x - 130, top: leo.y - 110, width: 260, height: 300 }}
-        />
-      )}
+    <SceneFrame
+      background={BACKGROUNDS.bedroom}
+      progress={progress}
+      onNext={done ? onComplete : undefined}
+    >
       <Character
-        state={done ? "happy" : hover ? "looking-up" : "neutral"}
-        x={leo.x}
-        y={leo.y + 210}
+        state={done ? "celebrating" : hover ? "happy" : "neutral"}
+        x={spot.x}
+        y={spot.y}
         height={330}
-        bob={hover || done}
+        bob={!hover}
+        glow={hover}
       />
       <SpeechBubble
-        text={done ? "Você me encontrou!" : "Leve a setinha até mim."}
-        anchorX={leo.x}
-        anchorY={leo.y - 90}
-        anchorWidth={280}
-        tone={done ? "cheer" : "normal"}
+        text={done ? "Você conseguiu mover a setinha!" : hover ? FEEDBACK.yes : spot.hint}
+        anchorX={spot.x}
+        anchorY={spot.y - 300}
+        anchorWidth={230}
+        side="auto"
+        tone={hover || done ? "cheer" : "normal"}
       />
       <FeedbackPopup message={feedback} />
-      {done && (
-        <div className="absolute left-1/2 top-[620px] -translate-x-1/2">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }

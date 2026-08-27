@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GameShell } from "../game/GameShell";
 
-const title = "Aventuras no Touchpad — Leo ensina o touchpad";
+const title = "Leo em Movimento — aprenda o touchpad brincando";
 const description =
   "Jogo educativo infantil para Chromebooks: aprenda a mover, clicar, arrastar e soltar com Leo, o ratinho.";
 
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <main className="h-screen w-screen overflow-hidden">
-      <h1 className="sr-only">Aventuras no Touchpad</h1>
+      <h1 className="sr-only">Leo em Movimento</h1>
       <GameShell />
     </main>
   );

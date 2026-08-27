@@ -34,27 +34,27 @@ export const FEEDBACK = {
 } as const;
 
 export const ACTIVITIES: Activity[] = [
-  { id: "opening", title: "Aventuras no Touchpad", skill: "—", instruction: "Vamos aprender a controlar a setinha?" },
+  { id: "opening", title: "Leo em Movimento", skill: "—", instruction: "Vamos aprender a controlar a setinha?" },
   {
     id: "find-leo",
     title: "Encontre o Leo",
     skill: "mover",
     instruction: "Leve a setinha até o Leo.",
-    params: { hoverRadius: 150, dwellMs: 800 },
+    params: { hoverRadius: 150, dwellMs: 800, rounds: 3 },
   },
   {
     id: "click-cheese",
     title: "Clique no queijo",
     skill: "clicar",
     instruction: "Clique no queijo!",
-    params: { itemSize: 170 },
+    params: { itemSize: 170, rounds: 3 },
   },
   {
     id: "carry-cheese",
     title: "Leve o queijo até Leo",
     skill: "arrastar",
     instruction: "Arraste o queijo até o Leo.",
-    params: { itemSize: 150, zonePadding: 60 },
+    params: { itemSize: 150, zonePadding: 60, rounds: 3 },
   },
   {
     id: "backpack",
@@ -75,7 +75,7 @@ export const ACTIVITIES: Activity[] = [
     title: "Complete a figura",
     skill: "arrastar",
     instruction: "Monte o foguete do Leo.",
-    params: { pieceSize: 170, snapRadius: 110 },
+    params: { pieceSize: 210, zonePadding: 70 },
   },
   {
     id: "garden-path",

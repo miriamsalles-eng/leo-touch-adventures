@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { UI } from "../assets";
 import { useAudio } from "../hooks/useAudio";
+import { GameButton } from "./GameButton";
 import { ProgressDots } from "./ProgressDots";
 
 export type SceneFrameProps = {
@@ -10,13 +11,26 @@ export type SceneFrameProps = {
   children: ReactNode;
   progress?: { total: number; current: number } | undefined;
   onRestart?: (() => void) | undefined;
+  /** Standard SEGUIR button — always in the same place on every scene. */
+  onNext?: (() => void) | undefined;
+  /** Hide the scene veil (used by the cover, which is already art-directed). */
+  plain?: boolean | undefined;
 };
 
 /**
  * Every scene lives inside this frame: overflow hidden, safe margins, mute
- * button and the discreet progress dots. Nothing critical touches the borders.
+ * button (top right), progress bar (bottom center) and the SEGUIR button
+ * (bottom right) — same position on every screen.
  */
-export function SceneFrame({ background, gradient, children, progress, onRestart }: SceneFrameProps) {
+export function SceneFrame({
+  background,
+  gradient,
+  children,
+  progress,
+  onRestart,
+  onNext,
+  plain = false,
+}: SceneFrameProps) {
   const { muted, toggleMute } = useAudio();
 
   return (
@@ -28,7 +42,7 @@ export function SceneFrame({ background, gradient, children, progress, onRestart
         backgroundPosition: "center",
       }}
     >
-      <div className="absolute inset-0 bg-[var(--scene-veil)]" />
+      {!plain && <div className="absolute inset-0 bg-[var(--scene-veil)]" />}
       <div className="absolute inset-0">{children}</div>
 
       <button
@@ -58,6 +72,12 @@ export function SceneFrame({ background, gradient, children, progress, onRestart
       )}
 
       {progress && <ProgressDots total={progress.total} current={progress.current} />}
+
+      {onNext && (
+        <div className="absolute right-8 top-[618px] z-40 animate-pop-in">
+          <GameButton onPress={onNext}>SEGUIR</GameButton>
+        </div>
+      )}
     </div>
   );
 }

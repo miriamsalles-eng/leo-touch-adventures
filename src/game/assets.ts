@@ -1,10 +1,9 @@
 /**
- * Central asset registry — "Aventuras no Touchpad".
+ * Central asset registry — "Leo em Movimento".
  *
  * Every visual asset is EXTERNAL and replaceable: nothing about Leo is drawn
  * with inline SVG in components. To swap art, drop a new file in
- * /public/assets/<folder>/ keeping the same filename (PNG/WebP transparent
- * recommended for Leo and objects) — no code change required.
+ * /public/assets/<folder>/ keeping the same filename — no code change needed.
  */
 
 export type LeoState =
@@ -22,23 +21,38 @@ export type LeoState =
 const LEO_DIR = "/assets/leo";
 
 /**
- * Each Leo state maps to its own file. States without dedicated art yet fall
- * back to a coherent placeholder pose (documented in the audit).
+ * Official artwork: neutral, pointing and celebrating. Remaining states reuse
+ * one of the three official poses so Leo's identity never changes on screen.
  */
 export const LEO: Record<LeoState, string> = {
   neutral: `${LEO_DIR}/leo-neutral.png`,
-  happy: `${LEO_DIR}/leo-happy.png`,
+  happy: `${LEO_DIR}/leo-celebrating.png`,
   pointing: `${LEO_DIR}/leo-pointing.png`,
-  thinking: `${LEO_DIR}/leo-neutral.png`, // placeholder -> leo-thinking.png
+  thinking: `${LEO_DIR}/leo-neutral.png`,
   celebrating: `${LEO_DIR}/leo-celebrating.png`,
-  "with-cheese": `${LEO_DIR}/leo-happy.png`, // placeholder -> leo-with-cheese.png
-  laptop: `${LEO_DIR}/leo-neutral.png`, // placeholder -> leo-laptop.png
-  "looking-up": `${LEO_DIR}/leo-neutral.png`, // placeholder
-  "looking-left": `${LEO_DIR}/leo-pointing.png`, // placeholder (mirrored in UI)
-  "looking-right": `${LEO_DIR}/leo-pointing.png`, // placeholder
+  "with-cheese": `${LEO_DIR}/leo-celebrating.png`,
+  laptop: `${LEO_DIR}/leo-neutral.png`,
+  "looking-up": `${LEO_DIR}/leo-neutral.png`,
+  "looking-left": `${LEO_DIR}/leo-pointing.png`,
+  "looking-right": `${LEO_DIR}/leo-pointing.png`,
+};
+
+/** Intrinsic aspect ratio (width / height) of the official Leo art. */
+export const LEO_ASPECT: Record<LeoState, number> = {
+  neutral: 566 / 900,
+  happy: 626 / 900,
+  pointing: 651 / 900,
+  thinking: 566 / 900,
+  celebrating: 626 / 900,
+  "with-cheese": 626 / 900,
+  laptop: 566 / 900,
+  "looking-up": 566 / 900,
+  "looking-left": 651 / 900,
+  "looking-right": 651 / 900,
 };
 
 export const BACKGROUNDS = {
+  cover: "/assets/backgrounds/cover.jpg",
   bedroom: "/assets/backgrounds/bedroom.jpg",
   garden: "/assets/backgrounds/garden.jpg",
   forest: "/assets/backgrounds/forest.jpg",
@@ -49,13 +63,13 @@ export const BACKGROUNDS = {
 
 const OBJ = "/assets/objects";
 export const OBJECTS = {
-  cheese: `${OBJ}/cheese.svg`,
+  cheese: `${OBJ}/cheese.png`,
+  backpack: `${OBJ}/backpack.png`,
   apple: `${OBJ}/apple.svg`,
   ball: `${OBJ}/ball.svg`,
   pencil: `${OBJ}/pencil.svg`,
   notebook: `${OBJ}/notebook.svg`,
   pencilcase: `${OBJ}/pencilcase.svg`,
-  backpack: `${OBJ}/backpack.svg`,
   book: `${OBJ}/book.svg`,
   shelf: `${OBJ}/shelf.svg`,
   box: `${OBJ}/box.svg`,
@@ -65,9 +79,10 @@ export const OBJECTS = {
   basket: `${OBJ}/basket.svg`,
   grape: `${OBJ}/grape.svg`,
   blanket: `${OBJ}/blanket.svg`,
-  puzzle1: `${OBJ}/puzzle1.svg`,
-  puzzle2: `${OBJ}/puzzle2.svg`,
-  puzzle3: `${OBJ}/puzzle3.svg`,
+  rocketNose: `${OBJ}/rocket-nose.svg`,
+  rocketBody: `${OBJ}/rocket-body.svg`,
+  rocketBase: `${OBJ}/rocket-base.svg`,
+  rocketGuide: `${OBJ}/rocket-guide.svg`,
   rocket: `${OBJ}/rocket.svg`,
   laptop: `${OBJ}/laptop.svg`,
   star: `${OBJ}/star.svg`,
@@ -80,6 +95,10 @@ export const UI = {
   arrow: "/assets/ui/arrow.svg",
   cursor: "/assets/ui/cursor.svg",
   restart: "/assets/ui/restart.svg",
+  gestureMove: "/assets/ui/gesture-move.svg",
+  gestureClick: "/assets/ui/gesture-click.svg",
+  gestureDrag: "/assets/ui/gesture-drag.svg",
+  gestureDrop: "/assets/ui/gesture-drop.svg",
 } as const;
 
 export const EFFECTS = {

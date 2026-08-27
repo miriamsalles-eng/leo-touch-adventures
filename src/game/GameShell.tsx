@@ -17,7 +17,7 @@ import { S11Picnic } from "./scenes/S11Picnic";
 import { S12Ending } from "./scenes/S12Ending";
 
 /** The only persisted value: which step the child stopped at. No profiles. */
-const STORAGE_KEY = "aventuras-touchpad:etapa";
+const STORAGE_KEY = "leo-em-movimento:etapa";
 
 export function GameShell() {
   const [step, setStep] = useState(0);
@@ -79,7 +79,7 @@ export function GameShell() {
       case 10:
         return <S11Picnic onComplete={next} progress={progress} />;
       default:
-        return <S12Ending onReplay={() => setStep(1)} onRestart={restart} />;
+        return <S12Ending onRestart={restart} />;
     }
   })();
 

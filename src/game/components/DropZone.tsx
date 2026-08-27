@@ -59,7 +59,7 @@ export function DropZone({
         />
       )}
       {image && (
-        <img src={image} alt="" draggable={false} className="relative" style={{ width: w * 0.72 }} />
+        <img src={image} alt="" draggable={false} className="relative object-contain" style={{ width: w * 0.72, height: h * 0.72 }} />
       )}
       {children}
       {label && (
