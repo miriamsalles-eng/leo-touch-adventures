@@ -46,7 +46,7 @@ export function S11Picnic({
         ? "Arraste a comida para a toalha."
         : phase === "walk"
           ? "Agora leve o Leo até a toalha."
-          : "Piquenique pronto! Você conseguiu!";
+          : "Muito bem! Piquenique pronto!";
 
   return (
     <SceneFrame
@@ -59,7 +59,13 @@ export function S11Picnic({
         src={OBJECTS.blanket}
         alt=""
         className="pointer-events-none absolute object-contain"
-        style={{ left: BLANKET.x, top: BLANKET.y, width: 380, height: 260, transform: "translate(-50%, -50%)" }}
+        style={{
+          left: BLANKET.x,
+          top: BLANKET.y,
+          width: 420,
+          height: 250,
+          transform: "translate(-50%, -50%) rotate(-3deg)",
+        }}
       />
 
       {/* The basket only exists while it has a job: opening the picnic. */}
@@ -142,18 +148,30 @@ export function S11Picnic({
         )}
 
       {(phase === "walk" || phase === "done") && !leoHome && (
-        <DropZone
-          id="leo-spot"
-          x={BLANKET.x}
-          y={BLANKET.y + 170}
-          w={220}
-          h={180}
-          tolerance="center"
-          padding={70}
-          active={false}
-          showTarget
-          label="Leo aqui"
-        />
+        <>
+          {/* Discreet pulsing glow: the blanket itself is the destination. */}
+          <div
+            className="pointer-events-none absolute animate-pulse rounded-[70px] border-[6px] border-dashed border-[var(--highlight)]/70 bg-[var(--highlight-soft)]/35"
+            style={{
+              left: BLANKET.x,
+              top: BLANKET.y,
+              width: 330,
+              height: 195,
+              transform: "translate(-50%, -50%) rotate(-3deg)",
+            }}
+          />
+          <DropZone
+            id="leo-spot"
+            x={BLANKET.x}
+            y={BLANKET.y}
+            w={320}
+            h={190}
+            tolerance="overlap"
+            padding={70}
+            active={false}
+            showTarget={false}
+          />
+        </>
       )}
 
       <DraggableLeo
@@ -168,7 +186,6 @@ export function S11Picnic({
             return "return";
           }
           play("celebrate");
-          show(FEEDBACK.did, "success");
           setLeoHome(true);
           setPhase("done");
           return "stay";
@@ -177,11 +194,11 @@ export function S11Picnic({
 
       <SpeechBubble
         text={bubble}
-        anchorX={200}
-        anchorY={130}
+        anchorX={190}
+        anchorY={150}
         anchorWidth={0}
         side="right"
-        width={360}
+        width={330}
         tone={phase === "done" ? "cheer" : "normal"}
       />
       <FeedbackPopup message={feedback} />
