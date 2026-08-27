@@ -2,7 +2,6 @@ import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
 import { BACKGROUNDS, OBJECTS } from "../assets";
 import { Character } from "../components/Character";
-import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -11,70 +10,98 @@ import { useAudio } from "../hooks/useAudio";
 const A = ACTIVITIES[2]!;
 const SIZE = A.params!["itemSize"] as number;
 
-const ITEMS = [
-  { id: "ball", image: OBJECTS.ball, x: 430, y: 400, label: "bola" },
-  { id: "cheese", image: OBJECTS.cheese, x: 660, y: 400, label: "queijo" },
-  { id: "apple", image: OBJECTS.apple, x: 890, y: 400, label: "maçã" },
+type Item = { id: string; image: string; x: number; y: number; correct: boolean };
+
+/** Three rounds, the cheese changes place so the child really looks for it. */
+const ROUNDS: Item[][] = [
+  [
+    { id: "apple", image: OBJECTS.apple, x: 480, y: 300, correct: false },
+    { id: "cheese", image: OBJECTS.cheese, x: 760, y: 300, correct: true },
+    { id: "ball", image: OBJECTS.ball, x: 620, y: 500, correct: false },
+  ],
+  [
+    { id: "cheese", image: OBJECTS.cheese, x: 470, y: 470, correct: true },
+    { id: "ball", image: OBJECTS.ball, x: 700, y: 290, correct: false },
+    { id: "apple", image: OBJECTS.apple, x: 880, y: 470, correct: false },
+  ],
+  [
+    { id: "ball", image: OBJECTS.ball, x: 460, y: 320, correct: false },
+    { id: "apple", image: OBJECTS.apple, x: 660, y: 500, correct: false },
+    { id: "cheese", image: OBJECTS.cheese, x: 880, y: 320, correct: true },
+  ],
 ];
 
-/** Activity 2 — clicking. Wrong picks give a kind hint and allow retry. */
-export function S03ClickCheese({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
+export function S03ClickCheese({
+  onComplete,
+  progress,
+}: {
+  onComplete: () => void;
+  progress: { total: number; current: number };
+}) {
+  const [round, setRound] = useState(0);
   const [done, setDone] = useState(false);
-  const [wrong, setWrong] = useState<string | null>(null);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
-  const pick = (id: string) => {
+  const items = ROUNDS[round]!;
+
+  const press = (item: Item) => {
     if (done) return;
-    if (id === "cheese") {
-      setDone(true);
-      play("success");
-      show(FEEDBACK.yes, "success", 2200);
-    } else {
-      setWrong(id);
+    if (!item.correct) {
       play("oops");
       show(FEEDBACK.almost, "gentle");
-      setTimeout(() => setWrong(null), 600);
+      return;
+    }
+    play("success");
+    if (round < ROUNDS.length - 1) {
+      show(FEEDBACK.yes, "success");
+      setRound((r) => r + 1);
+    } else {
+      show(FEEDBACK.did, "success");
+      setDone(true);
     }
   };
 
   return (
-    <SceneFrame background={BACKGROUNDS.garden} progress={progress}>
-      <Character state={done ? "happy" : "pointing"} x={175} y={680} height={300} bob={done} />
+    <SceneFrame
+      background={BACKGROUNDS.bedroom}
+      progress={progress}
+      onNext={done ? onComplete : undefined}
+    >
+      <Character state={done ? "celebrating" : "pointing"} x={190} y={640} height={330} bob={!done} />
       <SpeechBubble
-        text={done ? "Isso! Esse é o queijo." : "Clique no queijo!"}
-        anchorX={175}
-        anchorY={400}
-        anchorWidth={200}
+        text={done ? "Você clicou muito bem!" : "Clique no queijo!"}
+        anchorX={190}
+        anchorY={330}
+        anchorWidth={230}
         side="right"
-        width={320}
+        width={330}
         tone={done ? "cheer" : "normal"}
       />
 
-      {ITEMS.map((it) => (
-        <button
-          key={it.id}
-          type="button"
-          aria-label={it.label}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            pick(it.id);
-          }}
-          className={`absolute rounded-full transition-transform duration-200 hover:scale-110 ${
-            wrong === it.id ? "animate-wiggle" : ""
-          } ${done && it.id === "cheese" ? "scale-110" : ""}`}
-          style={{ left: it.x, top: it.y, width: SIZE, height: SIZE, transform: "translate(-50%, -50%)" }}
-        >
-          <img src={it.image} alt="" draggable={false} className="h-full w-full drop-shadow-[0_10px_14px_rgba(20,60,80,0.25)]" />
-        </button>
-      ))}
+      {!done &&
+        items.map((item) => (
+          <button
+            key={`${round}-${item.id}`}
+            type="button"
+            aria-label={item.id}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              press(item);
+            }}
+            className="absolute animate-pop-in rounded-full transition-transform duration-150 hover:scale-110 focus-visible:outline-4"
+            style={{ left: item.x, top: item.y, width: SIZE, height: SIZE, transform: "translate(-50%, -50%)" }}
+          >
+            <img
+              src={item.image}
+              alt=""
+              draggable={false}
+              className="h-full w-full object-contain drop-shadow-[0_10px_14px_rgba(20,60,80,0.25)]"
+            />
+          </button>
+        ))}
 
       <FeedbackPopup message={feedback} />
-      {done && (
-        <div className="absolute left-1/2 top-[620px] -translate-x-1/2">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }
