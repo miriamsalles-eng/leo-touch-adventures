@@ -9,10 +9,12 @@ export function useFeedback() {
   const [feedback, setFeedback] = useState<FeedbackMessage>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const show = useCallback((text: string, tone: FeedbackTone = "success", ms = 1600) => {
+  /** Standard durations: success ~3s, gentle retry ~2.2s. */
+  const show = useCallback((text: string, tone: FeedbackTone = "success", ms?: number) => {
+    const duration = ms ?? (tone === "success" ? 3000 : 2200);
     setFeedback({ text, tone });
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setFeedback(null), ms);
+    timer.current = setTimeout(() => setFeedback(null), duration);
   }, []);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);

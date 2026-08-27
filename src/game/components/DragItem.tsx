@@ -55,7 +55,7 @@ export function DragItem({
         src={image}
         alt={label ?? ""}
         draggable={false}
-        className="h-full w-full drop-shadow-[0_10px_14px_rgba(20,60,80,0.25)]"
+        className="h-full w-full object-contain drop-shadow-[0_10px_14px_rgba(20,60,80,0.25)]"
       />
     </div>
   );
