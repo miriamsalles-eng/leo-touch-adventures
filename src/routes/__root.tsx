@@ -77,10 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aventuras no Touchpad" },
+      { title: "Leo em Movimento" },
       { name: "description", content: "Jogo educativo infantil para aprender o touchpad com Leo." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Aventuras no Touchpad" },
+      { property: "og:title", content: "Leo em Movimento" },
       { property: "og:description", content: "Jogo educativo infantil para aprender o touchpad com Leo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

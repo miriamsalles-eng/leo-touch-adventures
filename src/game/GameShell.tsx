@@ -17,7 +17,7 @@ import { S11Picnic } from "./scenes/S11Picnic";
 import { S12Ending } from "./scenes/S12Ending";
 
 /** The only persisted value: which step the child stopped at. No profiles. */
-const STORAGE_KEY = "aventuras-touchpad:etapa";
+const STORAGE_KEY = "leo-em-movimento:etapa";
 
 export function GameShell() {
   const [step, setStep] = useState(0);
