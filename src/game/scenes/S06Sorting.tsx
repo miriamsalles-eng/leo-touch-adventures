@@ -103,7 +103,7 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
 
       <FeedbackPopup message={feedback} />
       {done && (
-        <div className="absolute left-[300px] top-[630px] -translate-x-1/2">
+        <div className="absolute right-8 top-[618px] z-40">
           <GameButton onPress={onComplete}>SEGUIR</GameButton>
         </div>
       )}

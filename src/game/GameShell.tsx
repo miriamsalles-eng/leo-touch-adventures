@@ -79,7 +79,7 @@ export function GameShell() {
       case 10:
         return <S11Picnic onComplete={next} progress={progress} />;
       default:
-        return <S12Ending onReplay={() => setStep(1)} onRestart={restart} />;
+        return <S12Ending onRestart={restart} />;
     }
   })();
 

@@ -88,7 +88,7 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
 
       <FeedbackPopup message={feedback} />
       {done && (
-        <div className="absolute left-[350px] top-[600px] -translate-x-1/2">
+        <div className="absolute right-8 top-[618px] z-40">
           <GameButton onPress={onComplete}>SEGUIR</GameButton>
         </div>
       )}
