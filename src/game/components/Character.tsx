@@ -1,4 +1,4 @@
-import { LEO, type LeoState } from "../assets";
+import { LEO, LEO_ASPECT, type LeoState } from "../assets";
 
 export type CharacterProps = {
   /** Pose/emotion. All poses come from external, replaceable files. */
@@ -7,7 +7,7 @@ export type CharacterProps = {
   x: number;
   /** Bottom Y (feet line) in stage coordinates. */
   y: number;
-  /** Rendered height in stage px. */
+  /** Rendered height in stage px. Width always follows the original ratio. */
   height?: number | undefined;
   flip?: boolean | undefined;
   bob?: boolean | undefined;
@@ -15,6 +15,10 @@ export type CharacterProps = {
   className?: string | undefined;
 };
 
+/**
+ * Leo is NEVER squeezed: only the height is set, the width follows the
+ * intrinsic ratio of the artwork (width:auto + object-contain).
+ */
 export function Character({
   state = "neutral",
   x,
@@ -25,6 +29,7 @@ export function Character({
   glow = false,
   className = "",
 }: CharacterProps) {
+  const width = height * LEO_ASPECT[state];
   return (
     <div
       className={`pointer-events-none absolute select-none ${bob ? "animate-leo-bob" : ""} ${className}`}
@@ -34,14 +39,20 @@ export function Character({
       {glow && (
         <div
           className="absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--highlight)] opacity-60 blur-2xl"
-          style={{ width: height * 0.9, height: height * 0.9 }}
+          style={{ width: width * 1.1, height: height * 0.9 }}
         />
       )}
       <img
         src={LEO[state]}
         alt=""
         draggable={false}
-        style={{ height, transform: flip ? "scaleX(-1)" : undefined }}
+        style={{
+          height,
+          width: "auto",
+          maxWidth: "none",
+          objectFit: "contain",
+          transform: flip ? "scaleX(-1)" : undefined,
+        }}
         className="drop-shadow-[0_12px_18px_rgba(20,60,80,0.22)]"
       />
     </div>

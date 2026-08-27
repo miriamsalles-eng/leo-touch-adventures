@@ -16,7 +16,7 @@ export type SpeechBubbleProps = {
 
 /**
  * Smart speech bubble: chooses left / right / above so it never covers Leo nor
- * runs off the stage, and always keeps a safe margin from the borders.
+ * runs off the stage. The tail is short, clean and always points at Leo.
  */
 export function SpeechBubble({
   text,
@@ -28,7 +28,7 @@ export function SpeechBubble({
   tone = "normal",
 }: SpeechBubbleProps) {
   const margin = 32;
-  const gap = 24;
+  const gap = 26;
   const estHeight = 118;
 
   let resolved: Exclude<BubbleSide, "auto"> = side === "auto" ? "right" : side;
@@ -45,11 +45,9 @@ export function SpeechBubble({
 
   let left = anchorX;
   let top = anchorY;
-  let transform = "translate(0, 0)";
   if (resolved === "right") {
     left = Math.min(anchorX + anchorWidth / 2 + gap, STAGE_W - width - margin);
     top = Math.max(anchorY - 30, margin);
-    transform = "translate(0, 0)";
   } else if (resolved === "left") {
     left = Math.max(anchorX - anchorWidth / 2 - gap - width, margin);
     top = Math.max(anchorY - 30, margin);
@@ -59,32 +57,55 @@ export function SpeechBubble({
   }
   top = Math.min(top, STAGE_H - estHeight - margin);
 
+  const border = tone === "cheer" ? "var(--highlight)" : "var(--bubble-line)";
+
+  /* The tail is a small triangle glued to the bubble edge, aimed at Leo. */
+  const tailSize = 26;
+  const vTail = Math.min(Math.max(anchorY - top, 34), estHeight - 18);
+  const hTail = Math.min(Math.max(anchorX - left, 40), width - 40);
+
+  const tailStyle: React.CSSProperties =
+    resolved === "right"
+      ? { left: -tailSize + 4, top: vTail, width: tailSize, height: tailSize }
+      : resolved === "left"
+        ? { right: -tailSize + 4, top: vTail, width: tailSize, height: tailSize }
+        : { bottom: -tailSize + 4, left: hTail - tailSize / 2, width: tailSize, height: tailSize };
+
+  const tailPath =
+    resolved === "right"
+      ? "polygon(0% 50%, 100% 0%, 100% 100%)"
+      : resolved === "left"
+        ? "polygon(100% 50%, 0% 0%, 0% 100%)"
+        : "polygon(50% 100%, 0% 0%, 100% 0%)";
+
   return (
     <div
-      className="pointer-events-none absolute animate-pop-in"
-      style={{ left, top, width, transform }}
+      className="pointer-events-none absolute z-30 animate-pop-in"
+      style={{ left, top, width }}
       role="status"
       aria-live="polite"
     >
       <div
-        className={`relative rounded-[28px] border-4 px-6 py-4 text-center shadow-[var(--shadow-soft)] ${
-          tone === "cheer"
-            ? "border-[var(--highlight)] bg-card"
-            : "border-card bg-card"
-        }`}
+        className="relative rounded-[28px] border-4 bg-card px-6 py-4 text-center shadow-[var(--shadow-soft)]"
+        style={{ borderColor: border }}
       >
         <p className="font-display text-[27px] leading-tight text-foreground">{text}</p>
         <span
-          className={`absolute h-5 w-5 rotate-45 border-4 bg-card ${
-            tone === "cheer" ? "border-[var(--highlight)]" : "border-card"
-          }`}
-          style={
-            resolved === "right"
-              ? { left: -12, top: 46, borderTop: "none", borderRight: "none" }
-              : resolved === "left"
-                ? { right: -12, top: 46, borderBottom: "none", borderLeft: "none" }
-                : { bottom: -12, left: width / 2 - 10, borderTop: "none", borderLeft: "none" }
-          }
+          className="absolute block"
+          style={{ ...tailStyle, clipPath: tailPath, backgroundColor: border }}
+        />
+        <span
+          className="absolute block bg-card"
+          style={{
+            ...tailStyle,
+            clipPath: tailPath,
+            transform:
+              resolved === "right"
+                ? "translateX(5px) scale(0.78)"
+                : resolved === "left"
+                  ? "translateX(-5px) scale(0.78)"
+                  : "translateY(-5px) scale(0.78)",
+          }}
         />
       </div>
     </div>
