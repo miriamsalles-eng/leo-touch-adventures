@@ -4,7 +4,6 @@ import { BACKGROUNDS, OBJECTS } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
-import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -14,93 +13,91 @@ const A = ACTIVITIES[4]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
+/** Items sit around the backpack, so each drag has a different direction. */
 const ITEMS = [
-  { id: "pencil", image: OBJECTS.pencil, x: 300, y: 250, label: "lápis" },
-  { id: "notebook", image: OBJECTS.notebook, x: 300, y: 430, label: "caderno" },
-  { id: "pencilcase", image: OBJECTS.pencilcase, x: 300, y: 610, label: "estojo" },
+  { id: "pencil", image: OBJECTS.pencil, x: 330, y: 250 },
+  { id: "notebook", image: OBJECTS.notebook, x: 300, y: 560 },
+  { id: "pencilcase", image: OBJECTS.pencilcase, x: 1010, y: 540 },
 ];
 
-/** Activity 4 — release inside the open backpack; 1/3 progress; misses return. */
-export function S05Backpack({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
-  const bag = { x: 830, y: 420 };
+const BAG = { x: 700, y: 400 };
+
+export function S05Backpack({
+  onComplete,
+  progress,
+}: {
+  onComplete: () => void;
+  progress: { total: number; current: number };
+}) {
   const [stored, setStored] = useState<string[]>([]);
-  const [over, setOver] = useState(false);
+  const [active, setActive] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
+
   const done = stored.length === ITEMS.length;
 
   return (
-    <SceneFrame background={BACKGROUNDS.bedroom} progress={progress}>
+    <SceneFrame
+      background={BACKGROUNDS.bedroom}
+      progress={progress}
+      onNext={done ? onComplete : undefined}
+    >
+      <Character state={done ? "celebrating" : "pointing"} x={1130} y={660} height={300} bob={!done} />
+
       <DropZone
         id="bag"
-        x={bag.x}
-        y={bag.y}
+        x={BAG.x}
+        y={BAG.y}
         w={300}
         h={300}
         tolerance="overlap"
         padding={PADDING}
-        active={over}
-        image={OBJECTS.backpack}
         enabled={!done}
+        active={active}
+        image={OBJECTS.backpack}
+        showTarget={!done}
       />
 
-      <div
-        className="pointer-events-none absolute flex gap-3"
-        style={{ left: bag.x, top: bag.y + 190, transform: "translateX(-50%)" }}
-      >
-        {stored.map((id) => {
-          const item = ITEMS.find((i) => i.id === id)!;
-          return <img key={id} src={item.image} alt="" className="h-[62px] w-[62px]" />;
-        })}
-      </div>
-
-      <div
-        className="pointer-events-none absolute rounded-full border-4 border-card bg-card/90 px-6 py-2 font-display text-[28px] text-foreground"
-        style={{ left: 1120, top: 130, transform: "translateX(-50%)" }}
-      >
+      <div className="absolute left-[640px] top-[600px] -translate-x-1/2 rounded-full border-4 border-card bg-card/90 px-7 py-2 font-display text-[26px] text-foreground shadow-[var(--shadow-soft)]">
         {stored.length}/{ITEMS.length}
       </div>
 
-      <Character state={done ? "celebrating" : "pointing"} x={1130} y={690} height={280} bob={done} />
+      {ITEMS.map((item) =>
+        stored.includes(item.id) ? null : (
+          <DragItem
+            key={item.id}
+            image={item.image}
+            start={{ x: item.x, y: item.y }}
+            size={SIZE}
+            label={item.id}
+            onPickup={() => play("pick")}
+            onZoneChange={(zone) => setActive(zone === "bag")}
+            onDrop={(zone) => {
+              setActive(false);
+              if (zone !== "bag") {
+                show(FEEDBACK.almost, "gentle");
+                return "return";
+              }
+              play("drop");
+              const next = [...stored, item.id];
+              setStored(next);
+              show(next.length === ITEMS.length ? FEEDBACK.did : FEEDBACK.yes, "success");
+              return "stay";
+            }}
+          />
+        ),
+      )}
+
       <SpeechBubble
-        text={done ? "Mochila pronta!" : "Guarde tudo na mochila."}
-        anchorX={200}
-        anchorY={90}
-        anchorWidth={0}
-        side="right"
-        width={330}
+        text={done ? "Mochila arrumada!" : "Guarde tudo na mochila."}
+        anchorX={1130}
+        anchorY={370}
+        anchorWidth={230}
+        side="left"
+        width={320}
         tone={done ? "cheer" : "normal"}
       />
-
-      {ITEMS.filter((i) => !stored.includes(i.id)).map((item) => (
-        <DragItem
-          key={item.id}
-          image={item.image}
-          start={{ x: item.x, y: item.y }}
-          size={SIZE}
-          label={item.label}
-          onPickup={() => play("pick")}
-          onZoneChange={(z) => setOver(z === "bag")}
-          onDrop={(zone) => {
-            setOver(false);
-            if (zone === "bag") {
-              setStored((s) => [...s, item.id]);
-              play("drop");
-              show(stored.length === ITEMS.length - 1 ? FEEDBACK.did : FEEDBACK.yes, "success");
-              return "stay";
-            }
-            show(FEEDBACK.almost, "gentle");
-            return "return";
-          }}
-        />
-      ))}
-
       <FeedbackPopup message={feedback} />
-      {done && (
-        <div className="absolute left-[380px] top-[620px] -translate-x-1/2">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }
