@@ -66,6 +66,7 @@
 
   --letterbox: oklch(0.42 0.06 235);
   --scene-veil: oklch(1 0 0 / 0.1);
+  --bubble-line: oklch(0.72 0.09 220);
   --stage-radius: 28px;
   --shadow-soft: 0 10px 26px oklch(0.4 0.08 235 / 0.22);
   --shadow-stage: 0 24px 60px oklch(0.3 0.08 235 / 0.45);
