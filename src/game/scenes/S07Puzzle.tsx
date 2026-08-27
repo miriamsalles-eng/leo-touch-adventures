@@ -14,9 +14,9 @@ const SNAP = A.params!["zonePadding"] as number | undefined;
 
 /** Three big, recognizable rocket parts: nose, body and base with fins. */
 const PIECES = [
-  { id: "nose", image: OBJECTS.rocketNose, start: { x: 250, y: 220 }, slot: { x: 800, y: 220 }, w: 210, h: 147 },
-  { id: "body", image: OBJECTS.rocketBody, start: { x: 230, y: 470 }, slot: { x: 800, y: 372 }, w: 210, h: 158 },
-  { id: "base", image: OBJECTS.rocketBase, start: { x: 460, y: 620 }, slot: { x: 800, y: 525 }, w: 210, h: 158 },
+  { id: "nose", image: OBJECTS.rocketNose, start: { x: 240, y: 180 }, slot: { x: 800, y: 220 }, w: 210, h: 147 },
+  { id: "body", image: OBJECTS.rocketBody, start: { x: 240, y: 400 }, slot: { x: 800, y: 372 }, w: 210, h: 158 },
+  { id: "base", image: OBJECTS.rocketBase, start: { x: 240, y: 610 }, slot: { x: 800, y: 525 }, w: 210, h: 158 },
 ];
 
 export function S07Puzzle({
@@ -43,7 +43,7 @@ export function S07Puzzle({
       <img
         src={OBJECTS.rocketGuide}
         alt=""
-        className="pointer-events-none absolute opacity-60"
+        className="pointer-events-none absolute opacity-40"
         style={{ left: 800, top: 372, width: 210, height: 452, transform: "translate(-50%, -50%)" }}
       />
 
@@ -97,13 +97,13 @@ export function S07Puzzle({
         ),
       )}
 
-      <Character state={done ? "celebrating" : "pointing"} x={200} y={690} height={280} bob={!done} />
+      <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} />
       <SpeechBubble
         text={done ? "Foguete pronto para voar!" : "Monte o foguete do Leo."}
-        anchorX={200}
-        anchorY={410}
-        anchorWidth={200}
-        side="right"
+        anchorX={1160}
+        anchorY={420}
+        anchorWidth={210}
+        side="left"
         width={320}
         tone={done ? "cheer" : "normal"}
       />

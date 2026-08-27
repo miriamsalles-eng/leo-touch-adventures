@@ -17,7 +17,7 @@ const PADDING = A.params!["zonePadding"] as number;
 const ITEMS = [
   { id: "pencil", image: OBJECTS.pencil, x: 330, y: 250 },
   { id: "notebook", image: OBJECTS.notebook, x: 300, y: 560 },
-  { id: "pencilcase", image: OBJECTS.pencilcase, x: 1010, y: 540 },
+  { id: "pencilcase", image: OBJECTS.pencilcase, x: 980, y: 230 },
 ];
 
 const BAG = { x: 700, y: 400 };
