@@ -40,7 +40,7 @@ export function S04CarryCheese({
 
   const bubble =
     done
-      ? "Você arrastou e soltou!"
+      ? "Muito bem! Você arrastou e soltou!"
       : step === "holding"
         ? "Agora leve até o Leo sem soltar."
         : step === "over"
@@ -99,7 +99,6 @@ export function S04CarryCheese({
               setRound((n) => n + 1);
               return "return";
             }
-            show(FEEDBACK.did, "success");
             setStep("round-done");
             setDone(true);
             return { x: target.x, y: target.y };

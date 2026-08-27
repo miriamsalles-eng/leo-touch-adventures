@@ -90,7 +90,7 @@ export function S07Puzzle({
               play("success");
               const next = [...placed, p.id];
               setPlaced(next);
-              show(next.length === PIECES.length ? FEEDBACK.did : FEEDBACK.yes, "success");
+              if (next.length < PIECES.length) show(FEEDBACK.yes, "success");
               return "stay";
             }}
           />
@@ -99,12 +99,12 @@ export function S07Puzzle({
 
       <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} />
       <SpeechBubble
-        text={done ? "Foguete pronto para voar!" : "Monte o foguete do Leo."}
-        anchorX={1160}
-        anchorY={420}
-        anchorWidth={210}
-        side="left"
-        width={320}
+        text={done ? "Muito bem! Foguete pronto!" : "Monte o foguete do Leo."}
+        anchorX={1165}
+        anchorY={400}
+        anchorWidth={200}
+        side="above"
+        width={290}
         tone={done ? "cheer" : "normal"}
       />
       <FeedbackPopup message={feedback} />

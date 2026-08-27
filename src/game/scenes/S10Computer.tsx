@@ -55,12 +55,12 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
 
       <Character state={done ? "happy" : "laptop"} x={1120} y={690} height={250} bob={done} />
       <SpeechBubble
-        text={done ? "Guardado na pasta certa!" : "Arraste a foto para a pasta."}
-        anchorX={200}
-        anchorY={90}
-        anchorWidth={0}
-        side="right"
-        width={340}
+        text={done ? "Muito bem! Guardado na pasta!" : "Arraste a foto para a pasta."}
+        anchorX={1120}
+        anchorY={440}
+        anchorWidth={200}
+        side="above"
+        width={300}
         tone={done ? "cheer" : "normal"}
       />
 
@@ -77,7 +77,6 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
             if (zone === "folder") {
               setDone(true);
               play("success");
-              show(FEEDBACK.did, "success", 2200);
               return "stay";
             }
             show(FEEDBACK.holding, "gentle");

@@ -17,7 +17,7 @@ const PADDING = A.params!["zonePadding"] as number;
 const ITEMS = [
   { id: "pencil", image: OBJECTS.pencil, x: 330, y: 250 },
   { id: "notebook", image: OBJECTS.notebook, x: 300, y: 560 },
-  { id: "pencilcase", image: OBJECTS.pencilcase, x: 980, y: 230 },
+  { id: "pencilcase", image: OBJECTS.pencilcase, x: 985, y: 585 },
 ];
 
 const BAG = { x: 700, y: 400 };
@@ -42,7 +42,7 @@ export function S05Backpack({
       progress={progress}
       onNext={done ? onComplete : undefined}
     >
-      <Character state={done ? "celebrating" : "pointing"} x={1130} y={660} height={300} bob={!done} />
+      <Character state={done ? "celebrating" : "pointing"} x={1160} y={690} height={300} bob={!done} />
 
       <DropZone
         id="bag"
@@ -81,7 +81,7 @@ export function S05Backpack({
               play("drop");
               const next = [...stored, item.id];
               setStored(next);
-              show(next.length === ITEMS.length ? FEEDBACK.did : FEEDBACK.yes, "success");
+              if (next.length < ITEMS.length) show(FEEDBACK.yes, "success");
               return "stay";
             }}
           />
@@ -89,12 +89,12 @@ export function S05Backpack({
       )}
 
       <SpeechBubble
-        text={done ? "Mochila arrumada!" : "Guarde tudo na mochila."}
-        anchorX={1130}
-        anchorY={370}
-        anchorWidth={230}
-        side="left"
-        width={320}
+        text={done ? "Muito bem! Mochila arrumada!" : "Guarde tudo na mochila."}
+        anchorX={1160}
+        anchorY={390}
+        anchorWidth={200}
+        side="above"
+        width={300}
         tone={done ? "cheer" : "normal"}
       />
       <FeedbackPopup message={feedback} />

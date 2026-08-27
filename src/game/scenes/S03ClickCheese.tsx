@@ -57,7 +57,6 @@ export function S03ClickCheese({
       show(FEEDBACK.yes, "success");
       setRound((r) => r + 1);
     } else {
-      show(FEEDBACK.did, "success");
       setDone(true);
     }
   };
@@ -68,13 +67,13 @@ export function S03ClickCheese({
       progress={progress}
       onNext={done ? onComplete : undefined}
     >
-      <Character state={done ? "celebrating" : "pointing"} x={190} y={640} height={330} bob={!done} />
+      <Character state={done ? "celebrating" : "pointing"} x={175} y={700} height={265} bob={!done} />
       <SpeechBubble
-        text={done ? "Você clicou muito bem!" : "Clique no queijo!"}
-        anchorX={190}
-        anchorY={330}
-        anchorWidth={230}
-        side="right"
+        text={done ? "Muito bem! Você clicou no queijo!" : "Clique no queijo!"}
+        anchorX={185}
+        anchorY={435}
+        anchorWidth={200}
+        side="above"
         width={330}
         tone={done ? "cheer" : "normal"}
       />
