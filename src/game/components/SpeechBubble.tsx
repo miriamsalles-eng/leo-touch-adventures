@@ -83,7 +83,7 @@ export function SpeechBubble({
   /* The tail is a small triangle glued to the bubble edge, aimed at Leo. */
   const tailSize = 26;
   const vTail = Math.min(Math.max(anchorY - top, 34), estHeight - 18);
-  const hTail = Math.min(Math.max(anchorX - left, 40), width - 40);
+  const hTail = Math.min(Math.max(anchorX - left, 40), w - 40);
 
   const tailStyle: React.CSSProperties =
     resolved === "right"
@@ -102,7 +102,7 @@ export function SpeechBubble({
   return (
     <div
       className="pointer-events-none absolute z-30 animate-pop-in"
-      style={{ left, top, width }}
+      style={{ left, top, width: w }}
       role="status"
       aria-live="polite"
     >
