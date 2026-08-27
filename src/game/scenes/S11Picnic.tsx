@@ -194,10 +194,10 @@ export function S11Picnic({
 
       <SpeechBubble
         text={bubble}
-        anchorX={190}
-        anchorY={150}
-        anchorWidth={0}
-        side="right"
+        anchorX={LEO_SPOT.x}
+        anchorY={LEO_SPOT.y - 155}
+        anchorWidth={150}
+        side="above"
         width={330}
         tone={phase === "done" ? "cheer" : "normal"}
       />
