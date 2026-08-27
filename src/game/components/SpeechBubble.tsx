@@ -30,32 +30,53 @@ export function SpeechBubble({
   const margin = 32;
   const gap = 26;
   const estHeight = 118;
+  const minWidth = 250;
 
-  let resolved: Exclude<BubbleSide, "auto"> = side === "auto" ? "right" : side;
+  const spaceRight = STAGE_W - (anchorX + anchorWidth / 2) - gap - margin;
+  const spaceLeft = anchorX - anchorWidth / 2 - gap - margin;
+  /** Leo on the left half speaks to the right, and vice-versa. */
+  const prefer: "left" | "right" = anchorX <= STAGE_W / 2 ? "right" : "left";
+  const other = prefer === "right" ? "left" : "right";
+
+  let resolved: Exclude<BubbleSide, "auto"> = side === "auto" ? prefer : side;
+  let w = width;
+
   if (side === "auto") {
-    const spaceRight = STAGE_W - (anchorX + anchorWidth / 2);
-    const spaceLeft = anchorX - anchorWidth / 2;
-    if (spaceRight >= width + gap + margin) resolved = "right";
-    else if (spaceLeft >= width + gap + margin) resolved = "left";
-    else resolved = "above";
+    const preferSpace = prefer === "right" ? spaceRight : spaceLeft;
+    const otherSpace = prefer === "right" ? spaceLeft : spaceRight;
+    if (preferSpace >= minWidth) {
+      resolved = prefer;
+      w = Math.min(width, preferSpace);
+    } else if (otherSpace >= minWidth) {
+      resolved = other;
+      w = Math.min(width, otherSpace);
+    } else {
+      resolved = "above";
+    }
     if (resolved === "above" && anchorY - estHeight - gap < margin) {
-      resolved = spaceRight >= spaceLeft ? "right" : "left";
+      resolved = preferSpace >= otherSpace ? prefer : other;
+      w = Math.max(minWidth, Math.min(width, Math.max(preferSpace, otherSpace)));
     }
   }
 
   let left = anchorX;
   let top = anchorY;
   if (resolved === "right") {
-    left = Math.min(anchorX + anchorWidth / 2 + gap, STAGE_W - width - margin);
+    left = Math.min(anchorX + anchorWidth / 2 + gap, STAGE_W - w - margin);
     top = Math.max(anchorY - 30, margin);
   } else if (resolved === "left") {
-    left = Math.max(anchorX - anchorWidth / 2 - gap - width, margin);
+    left = Math.max(anchorX - anchorWidth / 2 - gap - w, margin);
     top = Math.max(anchorY - 30, margin);
   } else {
-    left = Math.min(Math.max(anchorX - width / 2, margin), STAGE_W - width - margin);
+    left = Math.min(Math.max(anchorX - w / 2, margin), STAGE_W - w - margin);
     top = Math.max(anchorY - estHeight - gap, margin);
   }
   top = Math.min(top, STAGE_H - estHeight - margin);
+
+  /* Keep clear of the reserved top-center feedback band. */
+  const overlapsFeedbackBand = left < STAGE_W / 2 + 240 && left + w > STAGE_W / 2 - 240;
+  if (overlapsFeedbackBand && top < 118) top = 118;
+
 
   const border = tone === "cheer" ? "var(--highlight)" : "var(--bubble-line)";
 
