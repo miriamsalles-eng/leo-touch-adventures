@@ -4,7 +4,6 @@ import { BACKGROUNDS, OBJECTS } from "../assets";
 import { DragItem } from "../components/DragItem";
 import { DraggableLeo } from "../components/DraggableLeo";
 import { DropZone } from "../components/DropZone";
-import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -14,154 +13,178 @@ const A = ACTIVITIES[10]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
+/** Foods come from different directions, so every drag is a new movement. */
 const FOODS = [
-  { id: "cheese", image: OBJECTS.cheese, start: { x: 250, y: 250 } },
-  { id: "grape", image: OBJECTS.grape, start: { x: 250, y: 450 } },
+  { id: "cheese", image: OBJECTS.cheese, x: 250, y: 250 },
+  { id: "grape", image: OBJECTS.grape, x: 1030, y: 260 },
+  { id: "apple", image: OBJECTS.apple, x: 1060, y: 560 },
 ];
 
-type Phase = "click" | "drag" | "walk" | "done";
+const BLANKET = { x: 640, y: 430 };
+const LEO_SPOT = { x: 400, y: 560 };
 
-/** Activity 10 — final short challenge: click + drag + drop + move Leo. */
-export function S11Picnic({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
-  const blanket = { x: 720, y: 470 };
+type Phase = "click" | "fill" | "walk" | "done";
+
+export function S11Picnic({
+  onComplete,
+  progress,
+}: {
+  onComplete: () => void;
+  progress: { total: number; current: number };
+}) {
   const [phase, setPhase] = useState<Phase>("click");
   const [placed, setPlaced] = useState<string[]>([]);
-  const [over, setOver] = useState<string | null>(null);
+  const [active, setActive] = useState(false);
+  const [leoHome, setLeoHome] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
-  const message =
+  const bubble =
     phase === "click"
       ? "Clique na cesta para abrir."
-      : phase === "drag"
+      : phase === "fill"
         ? "Arraste a comida para a toalha."
         : phase === "walk"
           ? "Agora leve o Leo até a toalha."
-          : "Piquenique pronto!";
+          : "Piquenique pronto! Você conseguiu!";
 
   return (
-    <SceneFrame background={BACKGROUNDS.picnic} progress={progress}>
+    <SceneFrame
+      background={BACKGROUNDS.picnic}
+      progress={progress}
+      onNext={phase === "done" ? onComplete : undefined}
+    >
+      {/* Blanket: the picnic table for the food */}
       <img
         src={OBJECTS.blanket}
         alt=""
-        className="pointer-events-none absolute h-[260px] w-[330px] opacity-90"
-        style={{ left: blanket.x, top: blanket.y, transform: "translate(-50%, -50%)" }}
-      />
-      <DropZone
-        id="blanket"
-        x={blanket.x}
-        y={blanket.y}
-        w={300}
-        h={230}
-        tolerance="overlap"
-        padding={PADDING}
-        active={over === "blanket"}
-        enabled={phase === "drag" || phase === "walk"}
-        showTarget={phase === "drag" || phase === "walk"}
+        className="pointer-events-none absolute object-contain"
+        style={{ left: BLANKET.x, top: BLANKET.y, width: 380, height: 260, transform: "translate(-50%, -50%)" }}
       />
 
-      {placed.map((id, i) => {
-        const f = FOODS.find((x) => x.id === id)!;
-        return (
-          <img
-            key={id}
-            src={f.image}
-            alt=""
-            className="pointer-events-none absolute h-[92px] w-[92px]"
-            style={{ left: blanket.x - 70 + i * 130, top: blanket.y - 20, transform: "translate(-50%, -50%)" }}
-          />
-        );
-      })}
-
+      {/* The basket only exists while it has a job: opening the picnic. */}
       {phase === "click" && (
         <button
           type="button"
-          aria-label="cesta"
+          aria-label="Abrir a cesta"
           onPointerDown={(e) => {
             e.preventDefault();
             play("click");
-            setPhase("drag");
             show(FEEDBACK.yes, "success");
+            setPhase("fill");
           }}
-          className="absolute h-[170px] w-[170px] transition-transform hover:scale-110"
-          style={{ left: 640, top: 300, transform: "translate(-50%, -50%)" }}
+          className="absolute animate-pop-in transition-transform duration-150 hover:scale-110"
+          style={{ left: 640, top: 380, width: 210, height: 210, transform: "translate(-50%, -50%)" }}
         >
-          <img src={OBJECTS.basket} alt="" className="h-full w-full" draggable={false} />
+          <img src={OBJECTS.basket} alt="" className="h-full w-full object-contain" draggable={false} />
         </button>
       )}
+
       {phase !== "click" && (
-        <img
-          src={OBJECTS.basket}
-          alt=""
-          className="pointer-events-none absolute h-[130px] w-[130px] opacity-90"
-          style={{ left: 1080, top: 240, transform: "translate(-50%, -50%)" }}
+        <DropZone
+          id="blanket"
+          x={BLANKET.x}
+          y={BLANKET.y}
+          w={340}
+          h={220}
+          tolerance="overlap"
+          padding={PADDING}
+          enabled={phase === "fill"}
+          active={active}
+          showTarget={phase === "fill"}
         />
       )}
 
-      {phase === "drag" &&
-        FOODS.filter((f) => !placed.includes(f.id)).map((f) => (
-          <DragItem
-            key={f.id}
-            image={f.image}
-            start={f.start}
-            size={SIZE}
-            onPickup={() => play("pick")}
-            onZoneChange={setOver}
-            onDrop={(zone) => {
-              setOver(null);
-              if (zone === "blanket") {
+      {phase !== "click" &&
+        FOODS.map((f, i) =>
+          placed.includes(f.id) ? (
+            <img
+              key={`p-${f.id}`}
+              src={f.image}
+              alt=""
+              className="pointer-events-none absolute animate-pop-in object-contain"
+              style={{
+                left: BLANKET.x - 110 + i * 110,
+                top: BLANKET.y + 10,
+                width: 110,
+                height: 110,
+                transform: "translate(-50%, -50%)",
+              }}
+            />
+          ) : phase === "fill" ? (
+            <DragItem
+              key={f.id}
+              image={f.image}
+              start={{ x: f.x, y: f.y }}
+              size={SIZE}
+              label={f.id}
+              onPickup={() => play("pick")}
+              onZoneChange={(zone) => setActive(zone === "blanket")}
+              onDrop={(zone) => {
+                setActive(false);
+                if (zone !== "blanket") {
+                  show(FEEDBACK.holding, "gentle");
+                  return "return";
+                }
+                play("drop");
                 const next = [...placed, f.id];
                 setPlaced(next);
-                play("drop");
                 if (next.length === FOODS.length) {
+                  show(FEEDBACK.nice, "success");
                   setPhase("walk");
-                  show(FEEDBACK.did, "success");
                 } else {
                   show(FEEDBACK.yes, "success");
                 }
                 return "stay";
-              }
-              show(FEEDBACK.almost, "gentle");
-              return "return";
-            }}
-          />
-        ))}
+              }}
+            />
+          ) : null,
+        )}
+
+      {(phase === "walk" || phase === "done") && !leoHome && (
+        <DropZone
+          id="leo-spot"
+          x={BLANKET.x}
+          y={BLANKET.y + 170}
+          w={220}
+          h={180}
+          tolerance="center"
+          padding={70}
+          active={false}
+          showTarget
+          label="Leo aqui"
+        />
+      )}
 
       <DraggableLeo
-        start={{ x: 220, y: 620 }}
+        start={LEO_SPOT}
         size={150}
         state={phase === "done" ? "celebrating" : "neutral"}
         disabled={phase !== "walk"}
         onPickup={() => play("pick")}
-        onDrop={(zone, pos) => {
-          if (phase !== "walk") return "stay";
-          if (zone === "blanket") {
-            setPhase("done");
-            play("celebrate");
-            show(FEEDBACK.did, "success", 2400);
-            return { x: blanket.x + 30, y: blanket.y + 120 };
+        onDrop={(zone) => {
+          if (zone !== "leo-spot") {
+            show(FEEDBACK.almost, "gentle");
+            return "return";
           }
-          show(FEEDBACK.almost, "gentle");
-          return { x: pos.x, y: pos.y };
+          play("celebrate");
+          show(FEEDBACK.did, "success");
+          setLeoHome(true);
+          setPhase("done");
+          return "stay";
         }}
       />
 
       <SpeechBubble
-        text={message}
+        text={bubble}
         anchorX={200}
-        anchorY={90}
+        anchorY={130}
         anchorWidth={0}
         side="right"
-        width={380}
+        width={360}
         tone={phase === "done" ? "cheer" : "normal"}
       />
-
       <FeedbackPopup message={feedback} />
-      {phase === "done" && (
-        <div className="absolute left-1/2 top-[650px] -translate-x-1/2">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }
