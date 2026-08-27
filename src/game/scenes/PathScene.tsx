@@ -105,7 +105,6 @@ export function PathScene({
             if (Math.hypot(p.x - goal.x, p.y - goal.y) < 70) {
               setDone(true);
               play("success");
-              show(FEEDBACK.did, "success", 2400);
             }
           } else {
             setPos(safe.current);
@@ -117,11 +116,11 @@ export function PathScene({
 
       <SpeechBubble
         text={done ? successText : hint}
-        anchorX={190}
-        anchorY={90}
-        anchorWidth={0}
-        side="right"
-        width={360}
+        anchorX={start.x}
+        anchorY={Math.max(start.y - leoSize, 150)}
+        anchorWidth={leoSize}
+        side="above"
+        width={340}
         tone={done ? "cheer" : "normal"}
       />
 

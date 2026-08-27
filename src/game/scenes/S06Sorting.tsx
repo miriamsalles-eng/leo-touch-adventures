@@ -23,7 +23,7 @@ const PAIRS = [
 const ZONES = [
   { id: "shelf", image: OBJECTS.shelf, x: 660, y: 250, label: "estante" },
   { id: "box", image: OBJECTS.box, x: 660, y: 470, label: "caixa" },
-  { id: "case", image: OBJECTS.pencilcase, x: 950, y: 360, label: "estojo" },
+  { id: "case", image: OBJECTS.pencilcase, x: 930, y: 560, label: "estojo" },
 ];
 
 /** Activity 5 — three clearly distinct, large targets. */
@@ -66,14 +66,14 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
         );
       })}
 
-      <Character state={done ? "celebrating" : "thinking"} x={1160} y={690} height={250} bob={done} />
+      <Character state={done ? "celebrating" : "thinking"} x={1165} y={700} height={255} bob={done} />
       <SpeechBubble
-        text={done ? "Tudo no lugar certo!" : "Cada objeto no lugar certo."}
-        anchorX={200}
-        anchorY={90}
-        anchorWidth={0}
-        side="right"
-        width={330}
+        text={done ? "Muito bem! Tudo no lugar certo!" : "Cada objeto no lugar certo."}
+        anchorX={1160}
+        anchorY={440}
+        anchorWidth={200}
+        side="above"
+        width={300}
         tone={done ? "cheer" : "normal"}
       />
 
