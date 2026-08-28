@@ -26,16 +26,27 @@ export function Stage({ children }: { children: ReactNode }) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
     const compute = () => {
-      const el = outerRef.current;
-      if (!el) return;
       const { width, height } = el.getBoundingClientRect();
+      if (!width || !height) return;
       setScale(Math.min(width / STAGE_W, height / STAGE_H));
     };
     compute();
+    // ResizeObserver also catches iframe/container resizes that never fire
+    // a window resize event.
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
     window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
+    window.addEventListener("orientationchange", compute);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", compute);
+      window.removeEventListener("orientationchange", compute);
+    };
   }, []);
+
 
   const toStage = useCallback((clientX: number, clientY: number) => {
     const rect = stageRef.current?.getBoundingClientRect();
