@@ -16,29 +16,32 @@ export function S12Ending({ onRestart }: { onRestart: () => void }) {
     <SceneFrame background={BACKGROUNDS.garden}>
       <Character state="celebrating" x={220} y={660} height={380} bob />
 
-      <h2 className="absolute left-[790px] top-[110px] -translate-x-1/2 font-display text-[58px] text-[var(--primary-deep)] drop-shadow-[0_3px_0_rgba(255,255,255,0.9)]">
+      <h2 className="absolute left-[790px] top-[70px] -translate-x-1/2 font-display text-[56px] text-[var(--primary-deep)] drop-shadow-[0_3px_0_rgba(255,255,255,0.9)]">
         Você conseguiu!
       </h2>
 
-      <div className="absolute left-[790px] top-[350px] flex -translate-x-1/2 -translate-y-1/2 gap-6">
+      <div className="absolute left-[790px] top-[290px] flex -translate-x-1/2 -translate-y-1/2 gap-6">
         {SUMMARY.map((s) => (
           <div
             key={s.label}
-            className="flex h-[190px] w-[150px] flex-col items-center justify-center gap-3 rounded-[32px] border-4 border-card bg-card/95 shadow-[var(--shadow-soft)]"
+            className="flex h-[180px] w-[145px] flex-col items-center justify-center gap-3 rounded-[32px] border-4 border-card bg-card/95 shadow-[var(--shadow-soft)]"
           >
-            <img src={s.icon} alt="" className="h-[86px] w-[86px] object-contain" />
+            <img src={s.icon} alt="" className="h-[82px] w-[82px] object-contain" />
             <span className="font-display text-[22px] text-foreground">{s.label}</span>
           </div>
         ))}
       </div>
 
-      <p className="absolute left-[790px] top-[500px] -translate-x-1/2 font-display text-[30px] text-foreground">
-        Agora você sabe mover, clicar, arrastar e soltar!
+      <p className="absolute left-[790px] top-[400px] w-[640px] -translate-x-1/2 rounded-[28px] bg-card/85 px-8 py-4 text-center font-display text-[30px] leading-[1.25] text-foreground shadow-[var(--shadow-soft)]">
+        Agora você já sabe
+        <br />
+        mover, clicar, arrastar e soltar!
       </p>
 
-      <div className="absolute left-[790px] top-[610px] -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute left-[790px] top-[615px] -translate-x-1/2 -translate-y-1/2">
         <GameButton onPress={onRestart}>RECOMEÇAR</GameButton>
       </div>
+
     </SceneFrame>
   );
 }
