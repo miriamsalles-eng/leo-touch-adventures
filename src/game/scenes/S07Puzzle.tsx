@@ -93,10 +93,15 @@ export function S07Puzzle({
             start={p.start}
             size={p.w}
             label={`peça ${p.id}`}
-            onPickup={() => play("pick")}
+            onPickup={() => {
+              setDragging(true);
+              play("pick");
+            }}
             onZoneChange={(zone) => setActive(zone)}
             onDrop={(zone) => {
               setActive(null);
+              setDragging(false);
+
               if (zone !== p.id) {
                 show(FEEDBACK.almost, "gentle");
                 return "return";
