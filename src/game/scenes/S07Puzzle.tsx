@@ -29,10 +29,12 @@ export function S07Puzzle({
 }) {
   const [placed, setPlaced] = useState<string[]>([]);
   const [active, setActive] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
   const done = placed.length === PIECES.length;
+  const highlight = dragging || active !== null;
 
   return (
     <SceneFrame
@@ -44,9 +46,20 @@ export function S07Puzzle({
       <img
         src={OBJECTS.rocketGuide}
         alt=""
-        className="pointer-events-none absolute opacity-40"
-        style={{ left: 800, top: 372, width: 210, height: 452, transform: "translate(-50%, -50%)" }}
+        className="pointer-events-none absolute transition-all duration-300"
+        style={{
+          left: 800,
+          top: 372,
+          width: 210,
+          height: 452,
+          transform: `translate(-50%, -50%) scale(${highlight ? 1.03 : 1})`,
+          opacity: highlight ? 1 : 0.8,
+          filter: highlight
+            ? "drop-shadow(0 0 16px rgba(127,214,230,0.85))"
+            : "drop-shadow(0 2px 6px rgba(47,127,150,0.2))",
+        }}
       />
+
 
       {PIECES.map((p) => (
         <DropZone
