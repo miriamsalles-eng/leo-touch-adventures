@@ -7,12 +7,15 @@ export type SkillIntroStep = {
   icon?: string | undefined;
 };
 
+/** Default display time for skill introduction banners (ms). */
+export const SKILL_INTRO_DURATION = 4000;
+
 /**
  * Tiny, non-blocking banner that names the digital skill ONCE, at the very
  * beginning of the activity. It fades away on its own (no "continuar" button),
  * never covers the play area and never repeats between mini-rounds.
  */
-export function SkillIntro({ steps, durationMs = 1900 }: { steps: SkillIntroStep[]; durationMs?: number }) {
+export function SkillIntro({ steps, durationMs = SKILL_INTRO_DURATION }: { steps: SkillIntroStep[]; durationMs?: number }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
