@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
-import { BACKGROUNDS, OBJECTS } from "../assets";
+import { BACKGROUNDS, OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { RoundBadge } from "../components/RoundBadge";
+import { SkillIntro } from "../components/SkillIntro";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -73,7 +74,7 @@ export function S03ClickCheese({
     }
     play("success");
     if (round < ROUNDS.length - 1) {
-      show(FEEDBACK.yes, "success", 1300);
+      show("Isso! Você clicou!", "success", 1300);
       setRound((n) => n + 1);
     } else {
       setDone(true);
@@ -119,6 +120,7 @@ export function S03ClickCheese({
           </button>
         ))}
 
+      <SkillIntro steps={[{ text: "Agora vamos aprender a clicar!", icon: UI.gestureClick }]} />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>

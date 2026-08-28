@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ACTIVITIES } from "../data/activities";
-import { BACKGROUNDS } from "../assets";
+import { BACKGROUNDS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { RoundBadge } from "../components/RoundBadge";
+import { SkillIntro } from "../components/SkillIntro";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -54,7 +55,7 @@ export function S02FindLeo({
     timer.current = setTimeout(() => {
       play("success");
       if (round < ROUNDS.length - 1) {
-        show("Isso! Agora me encontre aqui!", "success", 1300);
+        show("Isso! Você moveu a setinha!", "success", 1300);
         setRound((r) => r + 1);
         setHover(false);
       } else {
@@ -90,6 +91,7 @@ export function S02FindLeo({
         side="auto"
         tone={hover || done ? "cheer" : "normal"}
       />
+      <SkillIntro steps={[{ text: "Agora vamos aprender a mover a setinha!", icon: UI.gestureMove }]} />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
