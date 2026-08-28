@@ -13,11 +13,12 @@ const A = ACTIVITIES[4]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
-/** Items sit around the backpack, so each drag has a different direction. */
+/** Four items around the backpack: left, right, above and below. */
 const ITEMS = [
-  { id: "pencil", image: OBJECTS.pencil, x: 330, y: 250 },
-  { id: "notebook", image: OBJECTS.notebook, x: 300, y: 560 },
-  { id: "pencilcase", image: OBJECTS.pencilcase, x: 985, y: 585 },
+  { id: "pencil", image: OBJECTS.pencil, x: 700, y: 170 },
+  { id: "notebook", image: OBJECTS.notebook, x: 300, y: 400 },
+  { id: "pencilcase", image: OBJECTS.pencilcase, x: 985, y: 400 },
+  { id: "book", image: OBJECTS.book, x: 480, y: 620 },
 ];
 
 const BAG = { x: 700, y: 400 };
@@ -58,7 +59,7 @@ export function S05Backpack({
         showTarget={!done}
       />
 
-      <div className="absolute left-[640px] top-[600px] -translate-x-1/2 rounded-full border-4 border-card bg-card/90 px-7 py-2 font-display text-[26px] text-foreground shadow-[var(--shadow-soft)]">
+      <div className="pointer-events-none absolute left-[200px] top-[40px] -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-card bg-card/90 px-7 py-2 font-display text-[26px] text-foreground shadow-[var(--shadow-soft)]">
         {stored.length}/{ITEMS.length}
       </div>
 
@@ -81,7 +82,7 @@ export function S05Backpack({
               play("drop");
               const next = [...stored, item.id];
               setStored(next);
-              if (next.length < ITEMS.length) show(FEEDBACK.yes, "success");
+              if (next.length < ITEMS.length) show(FEEDBACK.yes, "success", 1300);
               return "stay";
             }}
           />
@@ -89,7 +90,7 @@ export function S05Backpack({
       )}
 
       <SpeechBubble
-        text={done ? "Muito bem! Mochila arrumada!" : "Guarde tudo na mochila."}
+        text={done ? "Muito bem! Minha mochila está pronta!" : "Guarde tudo na minha mochila!"}
         anchorX={1160}
         anchorY={390}
         anchorWidth={200}

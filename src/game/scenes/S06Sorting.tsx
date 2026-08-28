@@ -5,6 +5,7 @@ import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { GameButton } from "../components/GameButton";
+import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -14,19 +15,22 @@ const A = ACTIVITIES[5]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
+/** Four actions mixing horizontal, vertical and gentle diagonal movements. */
 const PAIRS = [
-  { id: "book", image: OBJECTS.book, zone: "shelf", start: { x: 250, y: 250 }, label: "livro" },
-  { id: "ball", image: OBJECTS.ball, zone: "box", start: { x: 250, y: 430 }, label: "bola" },
-  { id: "pencil", image: OBJECTS.pencil, zone: "case", start: { x: 250, y: 610 }, label: "lápis" },
+  { id: "book", image: OBJECTS.book, zone: "shelf", start: { x: 230, y: 230 }, label: "livro" },
+  { id: "ball", image: OBJECTS.ball, zone: "box", start: { x: 230, y: 430 }, label: "bola" },
+  { id: "pencil", image: OBJECTS.pencil, zone: "case", start: { x: 230, y: 620 }, label: "lápis" },
+  { id: "notebook", image: OBJECTS.notebook, zone: "bag", start: { x: 470, y: 620 }, label: "caderno" },
 ];
 
 const ZONES = [
-  { id: "shelf", image: OBJECTS.shelf, x: 660, y: 250, label: "estante" },
-  { id: "box", image: OBJECTS.box, x: 660, y: 470, label: "caixa" },
-  { id: "case", image: OBJECTS.pencilcase, x: 930, y: 560, label: "estojo" },
+  { id: "shelf", image: OBJECTS.shelf, x: 620, y: 230, label: "estante" },
+  { id: "box", image: OBJECTS.box, x: 620, y: 470, label: "caixa" },
+  { id: "case", image: OBJECTS.pencilcase, x: 880, y: 230, label: "estojo" },
+  { id: "bag", image: OBJECTS.backpack, x: 880, y: 470, label: "mochila" },
 ];
 
-/** Activity 5 — three clearly distinct, large targets. */
+/** Activity 5 — four clearly distinct, large targets. */
 export function S06Sorting({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
   const [placed, setPlaced] = useState<string[]>([]);
   const [over, setOver] = useState<string | null>(null);
@@ -42,8 +46,8 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
           id={z.id}
           x={z.x}
           y={z.y}
-          w={210}
-          h={190}
+          w={200}
+          h={180}
           tolerance="overlap"
           padding={PADDING}
           active={over === z.id}
@@ -60,15 +64,15 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
             key={id}
             src={p.image}
             alt=""
-            className="pointer-events-none absolute h-[80px] w-[80px]"
-            style={{ left: z.x + 60, top: z.y + 55, transform: "translate(-50%, -50%)" }}
+            className="pointer-events-none absolute h-[70px] w-[70px] object-contain"
+            style={{ left: z.x + 55, top: z.y + 50, transform: "translate(-50%, -50%)" }}
           />
         );
       })}
 
       <Character state={done ? "celebrating" : "thinking"} x={1165} y={700} height={255} bob={done} />
       <SpeechBubble
-        text={done ? "Muito bem! Tudo no lugar certo!" : "Cada objeto no lugar certo."}
+        text={done ? "Muito bem! Tudo no lugar certo!" : "Coloque cada coisa no lugar!"}
         anchorX={1160}
         anchorY={440}
         anchorWidth={200}
@@ -89,9 +93,10 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
           onDrop={(zone) => {
             setOver(null);
             if (zone === p.zone) {
-              setPlaced((s) => [...s, p.id]);
+              const next = [...placed, p.id];
+              setPlaced(next);
               play("success");
-              show(FEEDBACK.yes, "success");
+              if (next.length < PAIRS.length) show(FEEDBACK.yes, "success", 1300);
               return "stay";
             }
             play("oops");
@@ -101,6 +106,7 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
         />
       ))}
 
+      <RoundBadge current={placed.length} total={PAIRS.length} x={200} y={40} />
       <FeedbackPopup message={feedback} />
       {done && (
         <div className="absolute right-8 top-[618px] z-40">

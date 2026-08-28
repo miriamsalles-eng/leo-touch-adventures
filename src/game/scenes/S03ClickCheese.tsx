@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
 import { BACKGROUNDS, OBJECTS } from "../assets";
 import { Character } from "../components/Character";
+import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -11,24 +12,42 @@ const A = ACTIVITIES[2]!;
 const SIZE = A.params!["itemSize"] as number;
 
 type Item = { id: string; image: string; x: number; y: number; correct: boolean };
+type Round = { hint: string; items: Item[] };
 
-/** Three rounds, the cheese changes place so the child really looks for it. */
-const ROUNDS: Item[][] = [
-  [
-    { id: "apple", image: OBJECTS.apple, x: 480, y: 300, correct: false },
-    { id: "cheese", image: OBJECTS.cheese, x: 760, y: 300, correct: true },
-    { id: "ball", image: OBJECTS.ball, x: 620, y: 500, correct: false },
-  ],
-  [
-    { id: "cheese", image: OBJECTS.cheese, x: 470, y: 470, correct: true },
-    { id: "ball", image: OBJECTS.ball, x: 700, y: 290, correct: false },
-    { id: "apple", image: OBJECTS.apple, x: 880, y: 470, correct: false },
-  ],
-  [
-    { id: "ball", image: OBJECTS.ball, x: 460, y: 320, correct: false },
-    { id: "apple", image: OBJECTS.apple, x: 660, y: 500, correct: false },
-    { id: "cheese", image: OBJECTS.cheese, x: 880, y: 320, correct: true },
-  ],
+/** Four rounds: move, position and click. Objects change place every round. */
+const ROUNDS: Round[] = [
+  {
+    hint: "Clique no queijo!",
+    items: [
+      { id: "apple", image: OBJECTS.apple, x: 480, y: 300, correct: false },
+      { id: "cheese", image: OBJECTS.cheese, x: 760, y: 300, correct: true },
+      { id: "ball", image: OBJECTS.ball, x: 620, y: 500, correct: false },
+    ],
+  },
+  {
+    hint: "Clique na bola!",
+    items: [
+      { id: "ball", image: OBJECTS.ball, x: 470, y: 470, correct: true },
+      { id: "cheese", image: OBJECTS.cheese, x: 700, y: 290, correct: false },
+      { id: "apple", image: OBJECTS.apple, x: 880, y: 470, correct: false },
+    ],
+  },
+  {
+    hint: "Clique na maçã!",
+    items: [
+      { id: "ball", image: OBJECTS.ball, x: 460, y: 320, correct: false },
+      { id: "apple", image: OBJECTS.apple, x: 880, y: 320, correct: true },
+      { id: "cheese", image: OBJECTS.cheese, x: 660, y: 500, correct: false },
+    ],
+  },
+  {
+    hint: "Clique na banana!",
+    items: [
+      { id: "banana", image: OBJECTS.banana, x: 640, y: 300, correct: true },
+      { id: "ball", image: OBJECTS.ball, x: 900, y: 480, correct: false },
+      { id: "apple", image: OBJECTS.apple, x: 440, y: 480, correct: false },
+    ],
+  },
 ];
 
 export function S03ClickCheese({
@@ -43,7 +62,7 @@ export function S03ClickCheese({
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
-  const items = ROUNDS[round]!;
+  const r = ROUNDS[round]!;
 
   const press = (item: Item) => {
     if (done) return;
@@ -54,8 +73,8 @@ export function S03ClickCheese({
     }
     play("success");
     if (round < ROUNDS.length - 1) {
-      show(FEEDBACK.yes, "success");
-      setRound((r) => r + 1);
+      show(FEEDBACK.yes, "success", 1300);
+      setRound((n) => n + 1);
     } else {
       setDone(true);
     }
@@ -69,7 +88,7 @@ export function S03ClickCheese({
     >
       <Character state={done ? "celebrating" : "pointing"} x={175} y={700} height={265} bob={!done} />
       <SpeechBubble
-        text={done ? "Muito bem! Você clicou no queijo!" : "Clique no queijo!"}
+        text={done ? "Muito bem! Você clicou muito bem!" : r.hint}
         anchorX={185}
         anchorY={435}
         anchorWidth={200}
@@ -79,7 +98,7 @@ export function S03ClickCheese({
       />
 
       {!done &&
-        items.map((item) => (
+        r.items.map((item) => (
           <button
             key={`${round}-${item.id}`}
             type="button"
@@ -100,6 +119,7 @@ export function S03ClickCheese({
           </button>
         ))}
 
+      <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

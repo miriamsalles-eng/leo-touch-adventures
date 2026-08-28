@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ACTIVITIES, FEEDBACK } from "../data/activities";
+import { ACTIVITIES } from "../data/activities";
 import { BACKGROUNDS } from "../assets";
 import { Character } from "../components/Character";
+import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -12,11 +13,15 @@ const A = ACTIVITIES[1]!;
 const RADIUS = A.params!["hoverRadius"] as number;
 const DWELL = A.params!["dwellMs"] as number;
 
-/** Three short rounds: Leo appears in a different spot each time. */
+/**
+ * Four short rounds using validated safe positions (never over the bubble,
+ * buttons or progress bar). Leo only moves AFTER the child reaches him.
+ */
 const ROUNDS = [
-  { x: 940, y: 560, hint: "Leve a setinha até o Leo." },
-  { x: 300, y: 520, hint: "Agora o Leo está aqui!" },
-  { x: 660, y: 460, hint: "Mais uma vez: até o Leo." },
+  { x: 640, y: 540, hint: "Leve a setinha até mim!" },
+  { x: 300, y: 520, hint: "Agora me encontre aqui!" },
+  { x: 990, y: 540, hint: "Agora me encontre aqui!" },
+  { x: 640, y: 400, hint: "Agora me encontre aqui!" },
 ];
 
 export function S02FindLeo({
@@ -49,11 +54,10 @@ export function S02FindLeo({
     timer.current = setTimeout(() => {
       play("success");
       if (round < ROUNDS.length - 1) {
-        show(FEEDBACK.yes, "success");
+        show("Isso! Agora me encontre aqui!", "success", 1300);
         setRound((r) => r + 1);
         setHover(false);
       } else {
-        show(FEEDBACK.did, "success");
         setDone(true);
       }
       timer.current = null;
@@ -79,13 +83,14 @@ export function S02FindLeo({
         glow={hover}
       />
       <SpeechBubble
-        text={done ? "Você conseguiu mover a setinha!" : hover ? FEEDBACK.yes : spot.hint}
+        text={done ? "Muito bem! Você me encontrou!" : hover ? "Isso!" : spot.hint}
         anchorX={spot.x}
         anchorY={spot.y - 300}
         anchorWidth={230}
         side="auto"
         tone={hover || done ? "cheer" : "normal"}
       />
+      <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );
