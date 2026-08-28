@@ -33,7 +33,7 @@ export function S12Ending({ onRestart }: { onRestart: () => void }) {
       </div>
 
       <p className="absolute left-[790px] top-[500px] -translate-x-1/2 font-display text-[30px] text-foreground">
-        Agora você sabe usar o touchpad!
+        Agora você sabe mover, clicar, arrastar e soltar!
       </p>
 
       <div className="absolute left-[790px] top-[610px] -translate-x-1/2 -translate-y-1/2">

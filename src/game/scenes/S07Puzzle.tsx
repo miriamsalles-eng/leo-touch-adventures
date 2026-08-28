@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
-import { BACKGROUNDS, OBJECTS } from "../assets";
+import { BACKGROUNDS, OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { SceneFrame } from "../components/SceneFrame";
+import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useAudio } from "../hooks/useAudio";
@@ -99,7 +100,7 @@ export function S07Puzzle({
 
       <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} />
       <SpeechBubble
-        text={done ? "Muito bem! Foguete pronto!" : "Vamos montar meu foguete!"}
+        text={done ? "Muito bem! Foguete pronto!" : "Monte o foguete!"}
         anchorX={1165}
         anchorY={400}
         anchorWidth={200}
@@ -107,6 +108,7 @@ export function S07Puzzle({
         width={290}
         tone={done ? "cheer" : "normal"}
       />
+      <SkillIntro steps={[{ text: "Agora vamos controlar melhor o movimento!", icon: UI.gestureMove }]} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

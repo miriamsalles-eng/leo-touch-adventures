@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
-import { BACKGROUNDS, OBJECTS } from "../assets";
+import { BACKGROUNDS, OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { GameButton } from "../components/GameButton";
 import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
+import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useAudio } from "../hooks/useAudio";
@@ -72,7 +73,7 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
 
       <Character state={done ? "celebrating" : "thinking"} x={1140} y={615} height={235} bob={done} />
       <SpeechBubble
-        text={done ? "Muito bem! Tudo no lugar certo!" : "Coloque cada coisa no lugar!"}
+        text={done ? "Muito bem! Tudo no lugar certo!" : "Coloque cada coisa no seu lugar."}
         anchorX={1140}
         anchorY={385}
         anchorWidth={200}
@@ -106,6 +107,7 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
         />
       ))}
 
+      <SkillIntro steps={[{ text: "Vamos usar o que aprendemos!", icon: UI.gestureDrag }]} />
       <RoundBadge current={placed.length} total={PAIRS.length} x={200} y={40} />
       <FeedbackPopup message={feedback} />
       {done && (

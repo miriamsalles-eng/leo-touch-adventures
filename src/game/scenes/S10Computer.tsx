@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
-import { OBJECTS } from "../assets";
+import { OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { GameButton } from "../components/GameButton";
 import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
+import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useAudio } from "../hooks/useAudio";
@@ -49,7 +50,7 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
       : phase === "unmute"
         ? "Agora ligue o som novamente!"
         : phase === "file"
-          ? "Agora leve a imagem para a pasta!"
+          ? "Leve a imagem para a pasta!"
           : "Muito bem! Tudo organizado!";
 
   const roundIndex = phase === "mute" ? 0 : phase === "unmute" ? 1 : phase === "file" ? 2 : 3;
@@ -120,6 +121,12 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
         />
       )}
 
+      {(phase === "mute" || phase === "unmute") && (
+        <SkillIntro steps={[{ text: "Agora vamos aprender a controlar o som!", icon: UI.soundOn }]} />
+      )}
+      {phase === "file" && (
+        <SkillIntro steps={[{ text: "Vamos usar o que aprendemos no computador!", icon: UI.gestureDrag }]} />
+      )}
       <RoundBadge current={roundIndex} total={3} x={200} y={40} />
       <FeedbackPopup message={feedback} />
       {phase === "done" && (

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
-import { BACKGROUNDS, OBJECTS } from "../assets";
+import { BACKGROUNDS, OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { RoundBadge } from "../components/RoundBadge";
+import { SkillIntro } from "../components/SkillIntro";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -96,7 +97,7 @@ export function S04CarryCheese({
             }
             play("success");
             if (round < ROUNDS.length - 1) {
-              show(FEEDBACK.yes, "success", 1300);
+              show(round === 0 ? "Muito bem! Você arrastou!" : "Isso! Você soltou no lugar certo!", "success", 1300);
               setStep("idle");
               setRound((n) => n + 1);
               return "return";
@@ -115,6 +116,12 @@ export function S04CarryCheese({
         anchorWidth={230}
         side="auto"
         tone={done || step === "over" ? "cheer" : "normal"}
+      />
+      <SkillIntro
+        steps={[
+          { text: "Agora vamos aprender a arrastar!", icon: UI.gestureDrag },
+          { text: "E soltar no lugar certo!", icon: UI.gestureDrop },
+        ]}
       />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} y={40} x={200} />
       <FeedbackPopup message={feedback} />

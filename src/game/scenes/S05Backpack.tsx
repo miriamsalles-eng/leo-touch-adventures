@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
-import { BACKGROUNDS, OBJECTS } from "../assets";
+import { BACKGROUNDS, OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { SceneFrame } from "../components/SceneFrame";
+import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useAudio } from "../hooks/useAudio";
@@ -98,6 +99,7 @@ export function S05Backpack({
         width={300}
         tone={done ? "cheer" : "normal"}
       />
+      <SkillIntro steps={[{ text: "Vamos praticar o que aprendemos!", icon: UI.gestureDrop }]} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );
