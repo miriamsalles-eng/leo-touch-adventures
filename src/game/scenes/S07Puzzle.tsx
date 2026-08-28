@@ -99,7 +99,7 @@ export function S07Puzzle({
 
       <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} />
       <SpeechBubble
-        text={done ? "Muito bem! Foguete pronto!" : "Monte o foguete do Leo."}
+        text={done ? "Muito bem! Foguete pronto!" : "Vamos montar meu foguete!"}
         anchorX={1165}
         anchorY={400}
         anchorWidth={200}

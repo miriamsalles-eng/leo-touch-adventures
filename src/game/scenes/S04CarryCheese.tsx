@@ -4,6 +4,7 @@ import { BACKGROUNDS, OBJECTS } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
+import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -13,11 +14,12 @@ const A = ACTIVITIES[3]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
-/** Three rounds with different drag directions: right, left and upwards. */
+/** Four rounds, one per direction: right, left, up and down. */
 const ROUNDS = [
-  { item: { x: 300, y: 520 }, leo: { x: 1000, y: 620 }, hint: "Arraste o queijo até o Leo." },
-  { item: { x: 1010, y: 300 }, leo: { x: 300, y: 620 }, hint: "Agora arraste para a esquerda." },
-  { item: { x: 660, y: 610 }, leo: { x: 660, y: 330 }, hint: "Agora arraste para cima." },
+  { item: { x: 300, y: 520 }, leo: { x: 1000, y: 620 }, hint: "Arraste o queijo até mim!" },
+  { item: { x: 1010, y: 520 }, leo: { x: 300, y: 620 }, hint: "Agora arraste para a esquerda!" },
+  { item: { x: 660, y: 620 }, leo: { x: 660, y: 340 }, hint: "Agora arraste para cima!" },
+  { item: { x: 660, y: 250 }, leo: { x: 660, y: 690 }, hint: "Agora arraste para baixo!" },
 ];
 
 type Step = "idle" | "holding" | "over" | "round-done";
@@ -42,9 +44,9 @@ export function S04CarryCheese({
     done
       ? "Muito bem! Você arrastou e soltou!"
       : step === "holding"
-        ? "Agora leve até o Leo sem soltar."
+        ? "Segure e traga até mim."
         : step === "over"
-          ? "Agora solte!"
+          ? "Agora solte aqui!"
           : r.hint;
 
   return (
@@ -94,7 +96,7 @@ export function S04CarryCheese({
             }
             play("success");
             if (round < ROUNDS.length - 1) {
-              show(FEEDBACK.yes, "success");
+              show(FEEDBACK.yes, "success", 1300);
               setStep("idle");
               setRound((n) => n + 1);
               return "return";
@@ -114,6 +116,7 @@ export function S04CarryCheese({
         side="auto"
         tone={done || step === "over" ? "cheer" : "normal"}
       />
+      <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} y={40} x={200} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

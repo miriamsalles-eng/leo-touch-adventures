@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ACTIVITIES, FEEDBACK } from "../data/activities";
 import { OBJECTS } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
 import { GameButton } from "../components/GameButton";
+import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
@@ -14,37 +15,71 @@ const A = ACTIVITIES[9]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
-/** Activity 9 — abstract kid desktop: drag a picture file into a big folder. */
+type Phase = "mute" | "unmute" | "file" | "done";
+
+/**
+ * Activity 9 — real digital behaviours: turn the sound off, turn it back on
+ * and then drag a picture file into a folder.
+ */
 export function S10Computer({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
   const folder = { x: 800, y: 380 };
-  const [done, setDone] = useState(false);
+  const [phase, setPhase] = useState<Phase>("mute");
   const [over, setOver] = useState(false);
   const { feedback, show } = useFeedback();
-  const { play } = useAudio();
+  const { play, muted } = useAudio();
+  const prevMuted = useRef(muted);
+
+  /* The sound button in the frame is the actual control for rounds 1 and 2. */
+  useEffect(() => {
+    if (prevMuted.current === muted) return;
+    prevMuted.current = muted;
+    if (phase === "mute" && muted) {
+      show("Isso! Você desligou o som.", "success", 1500);
+      setPhase("unmute");
+    } else if (phase === "unmute" && !muted) {
+      show("Muito bem! Você ligou o som.", "success", 1500);
+      play("success");
+      setPhase("file");
+    }
+  }, [muted, phase, show, play]);
+
+  const bubble =
+    phase === "mute"
+      ? "O som está ligado. Clique para desligar."
+      : phase === "unmute"
+        ? "Agora ligue o som novamente!"
+        : phase === "file"
+          ? "Agora leve a imagem para a pasta!"
+          : "Muito bem! Tudo organizado!";
+
+  const roundIndex = phase === "mute" ? 0 : phase === "unmute" ? 1 : phase === "file" ? 2 : 3;
 
   return (
     <SceneFrame
       gradient="linear-gradient(160deg, var(--desk-1), var(--desk-2) 55%, var(--desk-3))"
       progress={progress}
+      highlightAudio={phase === "mute" || phase === "unmute"}
     >
       <div className="pointer-events-none absolute inset-x-[70px] top-[70px] h-[560px] rounded-[44px] border-[10px] border-card bg-white/45" />
 
-      <DropZone
-        id="folder"
-        x={folder.x}
-        y={folder.y}
-        w={300}
-        h={260}
-        tolerance="overlap"
-        padding={PADDING}
-        active={over}
-        image={OBJECTS.folder}
-        label="Minhas fotos"
-        enabled={!done}
-        showTarget={!done}
-      />
+      {(phase === "file" || phase === "done") && (
+        <DropZone
+          id="folder"
+          x={folder.x}
+          y={folder.y}
+          w={300}
+          h={260}
+          tolerance="overlap"
+          padding={PADDING}
+          active={over}
+          image={OBJECTS.folder}
+          label="Minhas fotos"
+          enabled={phase === "file"}
+          showTarget={phase === "file"}
+        />
+      )}
 
-      {done && (
+      {phase === "done" && (
         <img
           src={OBJECTS.imagefile}
           alt=""
@@ -53,18 +88,18 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
         />
       )}
 
-      <Character state={done ? "happy" : "laptop"} x={1120} y={690} height={250} bob={done} />
+      <Character state={phase === "done" ? "happy" : "laptop"} x={1105} y={620} height={215} bob={phase === "done"} />
       <SpeechBubble
-        text={done ? "Muito bem! Guardado na pasta!" : "Arraste a foto para a pasta."}
-        anchorX={1120}
-        anchorY={440}
+        text={bubble}
+        anchorX={1105}
+        anchorY={400}
         anchorWidth={200}
         side="above"
         width={300}
-        tone={done ? "cheer" : "normal"}
+        tone={phase === "done" ? "cheer" : "normal"}
       />
 
-      {!done && (
+      {phase === "file" && (
         <DragItem
           image={OBJECTS.imagefile}
           start={{ x: 300, y: 380 }}
@@ -75,7 +110,7 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
           onDrop={(zone) => {
             setOver(false);
             if (zone === "folder") {
-              setDone(true);
+              setPhase("done");
               play("success");
               return "stay";
             }
@@ -85,8 +120,9 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
         />
       )}
 
+      <RoundBadge current={roundIndex} total={3} x={200} y={40} />
       <FeedbackPopup message={feedback} />
-      {done && (
+      {phase === "done" && (
         <div className="absolute right-8 top-[618px] z-40">
           <GameButton onPress={onComplete}>SEGUIR</GameButton>
         </div>

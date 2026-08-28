@@ -13,6 +13,8 @@ export type SceneFrameProps = {
   onRestart?: (() => void) | undefined;
   /** Standard SEGUIR button — always in the same place on every scene. */
   onNext?: (() => void) | undefined;
+  /** Discreetly pulses the sound button (used by the computer activity). */
+  highlightAudio?: boolean | undefined;
   /** Hide the scene veil (used by the cover, which is already art-directed). */
   plain?: boolean | undefined;
 };
@@ -29,6 +31,7 @@ export function SceneFrame({
   progress,
   onRestart,
   onNext,
+  highlightAudio = false,
   plain = false,
 }: SceneFrameProps) {
   const { muted, toggleMute } = useAudio();
@@ -52,7 +55,11 @@ export function SceneFrame({
           e.preventDefault();
           toggleMute();
         }}
-        className="absolute right-6 top-6 z-40 grid h-[68px] w-[68px] place-items-center rounded-full border-4 border-card bg-card/90 shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
+        className={`absolute right-6 top-6 z-40 grid h-[68px] w-[68px] place-items-center rounded-full border-4 bg-card/90 shadow-[var(--shadow-soft)] transition-transform hover:scale-105 ${
+          highlightAudio
+            ? "animate-pulse border-[var(--highlight)] ring-8 ring-[var(--highlight-soft)]/60"
+            : "border-card"
+        }`}
       >
         <img src={muted ? UI.soundOff : UI.soundOn} alt="" className="h-11 w-11" />
       </button>

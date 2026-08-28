@@ -120,3 +120,6 @@ export const AUDIO = {
 } as const;
 
 export type AudioKey = keyof typeof AUDIO;
+
+/** Soft, wordless background loop. Low volume, controlled by the sound button. */
+export const MUSIC = "/assets/audio/ambient.mp3";

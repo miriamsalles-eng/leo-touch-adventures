@@ -18,6 +18,7 @@ const FOODS = [
   { id: "cheese", image: OBJECTS.cheese, x: 250, y: 250 },
   { id: "grape", image: OBJECTS.grape, x: 1030, y: 260 },
   { id: "apple", image: OBJECTS.apple, x: 1060, y: 560 },
+  { id: "banana", image: OBJECTS.banana, x: 250, y: 590 },
 ];
 
 const BLANKET = { x: 640, y: 430 };
@@ -41,11 +42,11 @@ export function S11Picnic({
 
   const bubble =
     phase === "click"
-      ? "Clique na cesta para abrir."
+      ? "Clique na cesta para abrir!"
       : phase === "fill"
-        ? "Arraste a comida para a toalha."
+        ? "Arraste a comida para a toalha!"
         : phase === "walk"
-          ? "Agora leve o Leo até a toalha."
+          ? "Agora me leve até a toalha!"
           : "Muito bem! Piquenique pronto!";
 
   return (
@@ -110,10 +111,10 @@ export function S11Picnic({
               alt=""
               className="pointer-events-none absolute animate-pop-in object-contain"
               style={{
-                left: BLANKET.x - 110 + i * 110,
+                left: BLANKET.x - 105 + i * 90,
                 top: BLANKET.y + 10,
-                width: 110,
-                height: 110,
+                width: 95,
+                height: 95,
                 transform: "translate(-50%, -50%)",
               }}
             />
