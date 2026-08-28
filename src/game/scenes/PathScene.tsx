@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import { FEEDBACK } from "../data/activities";
-import { OBJECTS } from "../assets";
+import { OBJECTS, UI } from "../assets";
 import { DraggableLeo } from "../components/DraggableLeo";
 import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
+import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useAudio } from "../hooks/useAudio";
@@ -19,6 +20,8 @@ export type PathSceneProps = {
   leoSize: number;
   goalImage?: string | undefined;
   hint: string;
+  /** Short one-time sentence naming what this trail practises. */
+  intro?: string | undefined;
   successText: string;
   onComplete: () => void;
   progress: { total: number; current: number };
@@ -50,6 +53,7 @@ export function PathScene({
   leoSize,
   goalImage = OBJECTS.cheese,
   hint,
+  intro,
   successText,
   onComplete,
   progress,
@@ -65,6 +69,7 @@ export function PathScene({
 
   return (
     <SceneFrame background={background} progress={progress}>
+      {intro && <SkillIntro steps={[{ text: intro, icon: UI.gestureDrag }]} />}
       <svg className="pointer-events-none absolute inset-0" width={1280} height={720} aria-hidden="true">
         <path
           d={d}

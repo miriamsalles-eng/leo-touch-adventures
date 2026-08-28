@@ -23,6 +23,7 @@ export function S09Forest({ onComplete, progress }: { onComplete: () => void; pr
       leoSize={A.params!["leoSize"] as number}
       goalImage={OBJECTS.cheese}
       hint="Me leve até o final!"
+      intro="Agora o caminho tem mais curvas!"
       successText="Que trilha bem feita!"
       onComplete={onComplete}
       progress={progress}

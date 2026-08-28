@@ -20,6 +20,7 @@ export function S08GardenPath({ onComplete, progress }: { onComplete: () => void
       corridorWidth={A.params!["corridorWidth"] as number}
       leoSize={A.params!["leoSize"] as number}
       hint="Me leve pelo caminho!"
+      intro="Vamos controlar melhor o movimento!"
       successText="Chegamos! Você conseguiu!"
       onComplete={onComplete}
       progress={progress}
