@@ -70,11 +70,11 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
         );
       })}
 
-      <Character state={done ? "celebrating" : "thinking"} x={1165} y={700} height={255} bob={done} />
+      <Character state={done ? "celebrating" : "thinking"} x={1140} y={615} height={235} bob={done} />
       <SpeechBubble
         text={done ? "Muito bem! Tudo no lugar certo!" : "Coloque cada coisa no lugar!"}
-        anchorX={1160}
-        anchorY={440}
+        anchorX={1140}
+        anchorY={385}
         anchorWidth={200}
         side="above"
         width={300}

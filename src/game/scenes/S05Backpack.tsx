@@ -43,7 +43,7 @@ export function S05Backpack({
       progress={progress}
       onNext={done ? onComplete : undefined}
     >
-      <Character state={done ? "celebrating" : "pointing"} x={1160} y={690} height={300} bob={!done} />
+      <Character state={done ? "celebrating" : "pointing"} x={1140} y={615} height={255} bob={!done} />
 
       <DropZone
         id="bag"
@@ -91,8 +91,8 @@ export function S05Backpack({
 
       <SpeechBubble
         text={done ? "Muito bem! Minha mochila está pronta!" : "Guarde tudo na minha mochila!"}
-        anchorX={1160}
-        anchorY={390}
+        anchorX={1140}
+        anchorY={365}
         anchorWidth={200}
         side="above"
         width={300}
