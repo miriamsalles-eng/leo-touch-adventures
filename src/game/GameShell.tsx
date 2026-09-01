@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DragDropProvider } from "./dragdrop";
 import { Stage } from "./stage";
 import { AudioProvider, useAudio } from "./hooks/useAudio";
 import { TOTAL_STEPS } from "./data/activities";
+import { speech } from "./speech";
 import { S01Opening } from "./scenes/S01Opening";
 import { S02FindLeo } from "./scenes/S02FindLeo";
 import { S03ClickCheese } from "./scenes/S03ClickCheese";
@@ -31,7 +32,13 @@ function Flow() {
     start();
     next();
   }, [start, next]);
+  /* No line of a previous scene may keep talking after a transition. */
+  useEffect(() => {
+    speech.cancel();
+  }, [step, session]);
+
   const restart = useCallback(() => {
+    speech.cancel();
     setMuted(false);
     setSession((s) => s + 1);
     setStep(0);

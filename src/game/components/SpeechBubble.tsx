@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { STAGE_H, STAGE_W } from "../stage";
+import { UI } from "../assets";
+import { speech } from "../speech";
 
 export type BubbleSide = "auto" | "left" | "right" | "above";
 
@@ -27,6 +30,12 @@ export function SpeechBubble({
   width = 340,
   tone = "normal",
 }: SpeechBubbleProps) {
+  /* The bubble is the single narrator of Leo lines: whenever the text
+     changes it is spoken once (never two voices at the same time). */
+  useEffect(() => {
+    speech.speak(text);
+  }, [text]);
+
   const margin = 32;
   const gap = 26;
   const estHeight = 118;
@@ -111,6 +120,18 @@ export function SpeechBubble({
         style={{ borderColor: border }}
       >
         <p className="font-display text-[27px] leading-tight text-foreground">{text}</p>
+        <button
+          type="button"
+          aria-label="Ouvir novamente"
+          className="pointer-events-auto absolute -bottom-4 -right-3 grid h-[46px] w-[46px] place-items-center rounded-full border-4 border-card bg-card shadow-[var(--shadow-soft)] transition-transform hover:scale-110"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            speech.replay(text);
+          }}
+        >
+          <img src={UI.soundOn} alt="" className="h-7 w-7" />
+        </button>
         <span
           className="absolute block"
           style={{ ...tailStyle, clipPath: tailPath, backgroundColor: border }}

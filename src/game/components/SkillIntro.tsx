@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TIMING, speech } from "../speech";
 
 export type SkillIntroStep = {
   /** Short sentence naming the skill: "Agora vamos aprender a clicar!" */
@@ -11,7 +12,7 @@ export type SkillIntroStep = {
 
 
 /** Default display time for skill introduction banners (ms). */
-export const SKILL_INTRO_DURATION = 4000;
+export const SKILL_INTRO_DURATION = TIMING.SKILL_INTRO_MIN;
 
 /**
  * Tiny, non-blocking banner that names the digital skill ONCE, at the very
@@ -24,11 +25,27 @@ export function SkillIntro({ steps, durationMs = SKILL_INTRO_DURATION }: { steps
 
   useEffect(() => {
     if (!visible) return;
-    const t = setTimeout(() => {
-      if (index < steps.length - 1) setIndex((i) => i + 1);
-      else setVisible(false);
-    }, durationMs);
-    return () => clearTimeout(t);
+    const step = steps[index];
+    if (!step) return;
+    const startedAt = Date.now();
+    let hold: ReturnType<typeof setTimeout> | null = null;
+
+    /* The skill sentence is spoken and stays on screen for the whole audio
+       plus ~1s, respecting a 4s minimum when the sound is off. */
+    speech.speak(step.text, { interrupt: true });
+    const unsubscribe = speech.onEnd(step.text, () => {
+      const wait = Math.max(TIMING.POST_SPEECH_DELAY, durationMs - (Date.now() - startedAt));
+      hold = setTimeout(() => {
+        if (index < steps.length - 1) setIndex((i) => i + 1);
+        else setVisible(false);
+      }, wait);
+    });
+
+    return () => {
+      unsubscribe();
+      if (hold) clearTimeout(hold);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, visible, steps.length, durationMs]);
 
   if (!visible || steps.length === 0) return null;

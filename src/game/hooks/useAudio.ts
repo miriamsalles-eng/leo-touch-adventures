@@ -1,6 +1,7 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AUDIO, MUSIC, type AudioKey } from "../assets";
+import { speech } from "../speech";
 
 type AudioCtx = {
   /** Sound is on/off. Controls BOTH the background music and every effect. */
@@ -25,7 +26,16 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const cache = useRef(new Map<AudioKey, HTMLAudioElement>());
   const music = useRef<HTMLAudioElement | null>(null);
 
-  const start = useCallback(() => setStarted(true), []);
+  const start = useCallback(() => {
+    setStarted(true);
+    /* First user gesture: browsers now allow music and speech. */
+    speech.enable();
+  }, []);
+
+  /* The single sound button also controls the narration. */
+  useEffect(() => {
+    speech.setMuted(muted);
+  }, [muted]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -46,6 +56,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   useEffect(
     () => () => {
+      speech.cancel();
       music.current?.pause();
       music.current = null;
     },
