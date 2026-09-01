@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { DragDropProvider } from "./dragdrop";
 import { Stage } from "./stage";
 import { AudioProvider, useAudio } from "./hooks/useAudio";
