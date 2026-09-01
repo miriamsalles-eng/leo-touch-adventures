@@ -8,6 +8,7 @@ import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[2]!;
@@ -52,6 +53,14 @@ const ROUNDS: Round[] = [
   },
 ];
 
+/** Contextual success line for each round. */
+const SUCCESS = [
+  "Você encontrou o queijo!",
+  "Achou a bola!",
+  "Aí está a maçã!",
+  "Encontrou a banana!",
+];
+
 /** Bridge into the dragging activity. */
 const OUTRO = ["Você encontrou os objetos!", "Agora pode me ajudar a pegá-los?"];
 
@@ -63,27 +72,29 @@ export function S03ClickCheese({
   progress: { total: number; current: number };
 }) {
   const [round, setRound] = useState(0);
+  const [introDone, setIntroDone] = useState(false);
   const [done, setDone] = useState(false);
-  const { feedback, show } = useFeedback();
+  const { feedback, show, isBusy } = useFeedback();
   const { play } = useAudio();
 
   const outro = useNarration(OUTRO, done, onComplete);
   const r = ROUNDS[round]!;
+  const ready = introDone && !isBusy && !done;
+  useInstructionSpeech(r.hint, ready, round);
 
   const press = (item: Item) => {
-    if (done) return;
+    if (done || isBusy) return;
     if (!item.correct) {
       play("oops");
       show(FEEDBACK.almost, "gentle");
       return;
     }
     play("success");
-    if (round < ROUNDS.length - 1) {
-      show("Isso! Você encontrou!", "success", 2000);
-      setRound((n) => n + 1);
-    } else {
-      setDone(true);
-    }
+    /* The next instruction only starts after the feedback finished. */
+    show(SUCCESS[round] ?? SUCCESS[0]!, "success", undefined, () => {
+      if (round < ROUNDS.length - 1) setRound((n) => n + 1);
+      else setDone(true);
+    });
   };
 
   return (
@@ -116,7 +127,10 @@ export function S03ClickCheese({
           </button>
         ))}
 
-      <SkillIntro steps={[{ label: "Aprendendo: clicar", text: "Agora vamos aprender a clicar!", icon: UI.gestureClick }]} />
+      <SkillIntro
+        steps={[{ label: "Aprendendo: clicar", text: "Agora vamos aprender a clicar!", icon: UI.gestureClick }]}
+        onComplete={() => setIntroDone(true)}
+      />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
