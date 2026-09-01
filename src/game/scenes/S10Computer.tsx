@@ -10,6 +10,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[9]!;
@@ -29,10 +30,12 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
   const folder = { x: 800, y: 380 };
   const [phase, setPhase] = useState<Phase>("mute");
   const [over, setOver] = useState(false);
-  const { feedback, show } = useFeedback();
+  const { feedback, show, isBusy } = useFeedback();
   const { play, muted } = useAudio();
   const prevMuted = useRef(muted);
   const [greeted, setGreeted] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
+  const [fileIntroDone, setFileIntroDone] = useState(false);
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, phase === "done", onComplete);
 
@@ -41,12 +44,12 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
     if (prevMuted.current === muted) return;
     prevMuted.current = muted;
     if (phase === "mute" && muted) {
-      show("Isso! Você desligou o som.", "success", 1500);
-      setPhase("unmute");
+      /* The voice is off now: this feedback is mostly visual, but it still
+         respects the minimum reading time before the next step. */
+      show("Você desligou o som.", "success", undefined, () => setPhase("unmute"));
     } else if (phase === "unmute" && !muted) {
-      show("Muito bem! Você ligou o som.", "success", 1500);
       play("success");
-      setPhase("file");
+      show("O som está ligado novamente.", "success", undefined, () => setPhase("file"));
     }
   }, [muted, phase, show, play]);
 
@@ -59,7 +62,15 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
         ? "Agora ligue o som novamente!"
         : phase === "file"
         ? "Leve a imagem para a pasta!"
-        : "Muito bem! Tudo organizado!");
+        : "Tudo organizado!");
+
+  /* Each step speaks its own instruction, once, after the banner ended. */
+  useInstructionSpeech(
+    phase === "mute" ? "O som está ligado. Clique para desligar." : phase === "unmute" ? "Agora ligue o som novamente!" : null,
+    greeted && introDone && !isBusy,
+    phase,
+  );
+  useInstructionSpeech("Leve a imagem para a pasta!", phase === "file" && fileIntroDone && !isBusy, "file");
 
   const roundIndex = phase === "mute" ? 0 : phase === "unmute" ? 1 : phase === "file" ? 2 : 3;
 
@@ -129,11 +140,17 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
         />
       )}
 
-      {(phase === "mute" || phase === "unmute") && (
-        <SkillIntro steps={[{ label: "Aprendendo: controlar o som", text: "Vamos aprender a controlar o som!", icon: UI.soundOn }]} />
+      {greeted && (phase === "mute" || phase === "unmute") && (
+        <SkillIntro
+          steps={[{ label: "Aprendendo: controlar o som", text: "Vamos aprender a controlar o som!", icon: UI.soundOn }]}
+          onComplete={() => setIntroDone(true)}
+        />
       )}
       {phase === "file" && (
-        <SkillIntro steps={[{ label: "Usando o que aprendemos", text: "Vamos usar o que aprendemos!", icon: UI.gestureDrag }]} />
+        <SkillIntro
+          steps={[{ label: "Usando o que aprendemos", text: "Vamos usar o que aprendemos!", icon: UI.gestureDrag }]}
+          onComplete={() => setFileIntroDone(true)}
+        />
       )}
       <RoundBadge current={roundIndex} total={3} x={200} y={40} />
       <FeedbackPopup message={feedback} />
