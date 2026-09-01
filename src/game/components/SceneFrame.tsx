@@ -15,6 +15,12 @@ export type SceneFrameProps = {
   onNext?: (() => void) | undefined;
   /** Discreetly pulses the sound button (used by the computer activity). */
   highlightAudio?: boolean | undefined;
+  /**
+   * Slightly calms the illustrated scenery (saturation/contrast) so the
+   * manipulable objects and Leo stand out. The background keeps its art —
+   * only its intensity drops a little. Leo and objects stay at 100%.
+   */
+  focus?: boolean | undefined;
   /** Hide the scene veil (used by the cover, which is already art-directed). */
   plain?: boolean | undefined;
 };
@@ -32,21 +38,26 @@ export function SceneFrame({
   onRestart,
   onNext,
   highlightAudio = false,
+  focus = false,
   plain = false,
 }: SceneFrameProps) {
   const { muted, toggleMute } = useAudio();
 
   return (
-    <div
-      className="absolute inset-0 overflow-hidden"
-      style={{
-        backgroundImage: background ? `url(${background})` : gradient,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <div className="absolute inset-0 animate-scene-in overflow-hidden">
+      <div
+        className="absolute inset-0 transition-[filter] duration-500"
+        style={{
+          backgroundImage: background ? `url(${background})` : gradient,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: focus ? "saturate(0.82) contrast(0.94) brightness(1.05)" : undefined,
+        }}
+      />
       {!plain && <div className="absolute inset-0 bg-[var(--scene-veil)]" />}
+      {focus && <div className="absolute inset-0 bg-white/12" />}
       <div className="absolute inset-0">{children}</div>
+
 
       <button
         type="button"
