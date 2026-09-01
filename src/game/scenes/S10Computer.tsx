@@ -4,17 +4,20 @@ import { OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
-import { GameButton } from "../components/GameButton";
 import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[9]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
+
+const HELLO = ["Vamos guardar as fotos do passeio?"];
+const OUTRO = ["Tudo organizado!", "Agora vamos fazer um piquenique?"];
 
 type Phase = "mute" | "unmute" | "file" | "done";
 
@@ -29,6 +32,9 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
   const { feedback, show } = useFeedback();
   const { play, muted } = useAudio();
   const prevMuted = useRef(muted);
+  const [greeted, setGreeted] = useState(false);
+  const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
+  const outro = useNarration(OUTRO, phase === "done", onComplete);
 
   /* The sound button in the frame is the actual control for rounds 1 and 2. */
   useEffect(() => {
@@ -45,13 +51,15 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
   }, [muted, phase, show, play]);
 
   const bubble =
-    phase === "mute"
+    hello ??
+    outro ??
+    (phase === "mute"
       ? "O som está ligado. Clique para desligar."
       : phase === "unmute"
         ? "Agora ligue o som novamente!"
         : phase === "file"
-          ? "Leve a imagem para a pasta!"
-          : "Muito bem! Tudo organizado!";
+        ? "Leve a imagem para a pasta!"
+        : "Muito bem! Tudo organizado!");
 
   const roundIndex = phase === "mute" ? 0 : phase === "unmute" ? 1 : phase === "file" ? 2 : 3;
 
@@ -122,18 +130,13 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
       )}
 
       {(phase === "mute" || phase === "unmute") && (
-        <SkillIntro steps={[{ text: "Agora vamos aprender a controlar o som!", icon: UI.soundOn }]} />
+        <SkillIntro steps={[{ label: "Aprendendo: controlar o som", text: "Vamos aprender a controlar o som!", icon: UI.soundOn }]} />
       )}
       {phase === "file" && (
-        <SkillIntro steps={[{ text: "Vamos usar o que aprendemos no computador!", icon: UI.gestureDrag }]} />
+        <SkillIntro steps={[{ label: "Usando o que aprendemos", text: "Vamos usar o que aprendemos!", icon: UI.gestureDrag }]} />
       )}
       <RoundBadge current={roundIndex} total={3} x={200} y={40} />
       <FeedbackPopup message={feedback} />
-      {phase === "done" && (
-        <div className="absolute right-8 top-[618px] z-40">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }
