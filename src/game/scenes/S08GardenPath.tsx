@@ -19,8 +19,11 @@ export function S08GardenPath({ onComplete, progress }: { onComplete: () => void
       ]}
       corridorWidth={A.params!["corridorWidth"] as number}
       leoSize={A.params!["leoSize"] as number}
-      hint="Me leve pelo caminho!"
-      intro="Vamos controlar melhor o movimento!"
+      hint="Me leve pelo caminho até o queijo!"
+      intro="Vamos praticar o arrastar!"
+      introLabel="Praticando: arrastar"
+      prelude={["Opa! Tem um queijo ali!", "Você pode me levar até ele?"]}
+      outro={["Peguei! Que delícia!", "Vamos ver o que tem na floresta?"]}
       successText="Chegamos! Você conseguiu!"
       onComplete={onComplete}
       progress={progress}
