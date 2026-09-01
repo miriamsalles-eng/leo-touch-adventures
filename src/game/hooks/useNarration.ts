@@ -12,7 +12,7 @@ export function useNarration(
   lines: string[],
   active: boolean,
   onDone?: () => void,
-  minMs = TIMING.NARRATIVE_MIN,
+  minMs: number = TIMING.NARRATIVE_MIN,
 ): string | null {
   const [index, setIndex] = useState(0);
 
