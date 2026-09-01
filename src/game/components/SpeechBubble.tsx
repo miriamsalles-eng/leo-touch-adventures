@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { STAGE_H, STAGE_W } from "../stage";
 import { UI } from "../assets";
 import { speech } from "../speech";

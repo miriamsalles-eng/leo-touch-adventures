@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TIMING, speech } from "../speech";
 
 export type SkillIntroStep = {
@@ -18,26 +18,45 @@ export const SKILL_INTRO_DURATION = TIMING.SKILL_INTRO_MIN;
  * Tiny, non-blocking banner that names the digital skill ONCE, at the very
  * beginning of the activity. It fades away on its own (no "continuar" button),
  * never covers the play area and never repeats between mini-rounds.
+ * `onComplete` fires only after the last step was narrated and held, so the
+ * scene can release the practical instruction without overlapping voices.
  */
-export function SkillIntro({ steps, durationMs = SKILL_INTRO_DURATION }: { steps: SkillIntroStep[]; durationMs?: number }) {
+export function SkillIntro({
+  steps,
+  durationMs = SKILL_INTRO_DURATION,
+  onComplete,
+}: {
+  steps: SkillIntroStep[];
+  durationMs?: number;
+  onComplete?: (() => void) | undefined;
+}) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+  const spoken = useRef<number | null>(null);
+  const doneRef = useRef(onComplete);
+  doneRef.current = onComplete;
 
   useEffect(() => {
     if (!visible) return;
     const step = steps[index];
     if (!step) return;
+    if (spoken.current === index) return;
+    spoken.current = index;
+
     const startedAt = Date.now();
     let hold: ReturnType<typeof setTimeout> | null = null;
 
     /* The skill sentence is spoken and stays on screen for the whole audio
        plus ~1s, respecting a 4s minimum when the sound is off. */
-    speech.speak(step.text, { interrupt: true });
-    const unsubscribe = speech.onEnd(step.text, () => {
+    const id = speech.speak(step.text);
+    const unsubscribe = speech.onEnd(id, () => {
       const wait = Math.max(TIMING.POST_SPEECH_DELAY, durationMs - (Date.now() - startedAt));
       hold = setTimeout(() => {
         if (index < steps.length - 1) setIndex((i) => i + 1);
-        else setVisible(false);
+        else {
+          setVisible(false);
+          doneRef.current?.();
+        }
       }, wait);
     });
 

@@ -8,32 +8,53 @@ export type FeedbackMessage = { text: string; tone: FeedbackTone } | null;
 /** Transient, always-kind feedback. Errors never punish nor auto-advance. */
 export function useFeedback() {
   const [feedback, setFeedback] = useState<FeedbackMessage>(null);
+  const busy = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unsubscribe = useRef<(() => void) | null>(null);
 
   /**
    * The feedback is spoken and stays visible for the whole narration plus a
-   * short pause; `ms` acts as the minimum reading time when there is no voice.
+   * short pause; `ms` acts as the minimum reading time when there is no voice
+   * and can only make it LONGER than the global minimum, never shorter.
+   * `onDone` runs after the feedback disappeared — the next round/instruction
+   * starts there, so it is never spoken on top of the feedback.
    */
-  const show = useCallback((text: string, tone: FeedbackTone = "success", ms?: number) => {
-    const min = ms ?? (tone === "success" ? TIMING.ROUND_FEEDBACK_MIN : TIMING.GENTLE_FEEDBACK_MIN);
-    const startedAt = Date.now();
-    setFeedback({ text, tone });
-    if (timer.current) clearTimeout(timer.current);
-    if (unsubscribe.current) unsubscribe.current();
+  const show = useCallback(
+    (text: string, tone: FeedbackTone = "success", ms?: number, onDone?: () => void) => {
+      const floor = tone === "success" ? TIMING.ROUND_FEEDBACK_MIN : TIMING.GENTLE_FEEDBACK_MIN;
+      const min = Math.max(ms ?? floor, floor);
+      const startedAt = Date.now();
+      setFeedback({ text, tone });
+      busy.current = true;
+      if (timer.current) clearTimeout(timer.current);
+      if (unsubscribe.current) unsubscribe.current();
 
-    speech.speak(text, { interrupt: true, force: true });
-    unsubscribe.current = speech.onEnd(text, () => {
-      const wait = Math.max(TIMING.FEEDBACK_POST_SPEECH_DELAY, min - (Date.now() - startedAt));
-      timer.current = setTimeout(() => setFeedback(null), wait);
-    });
-  }, []);
+      /* The child already acted: any instruction still talking became
+         useless, so the feedback may take the voice immediately. */
+      speech.cancel({ release: true });
+      const id = speech.speak(text);
+      unsubscribe.current = speech.onEnd(id, () => {
+        const wait = Math.max(TIMING.FEEDBACK_POST_SPEECH_DELAY, min - (Date.now() - startedAt));
+        timer.current = setTimeout(() => {
+          setFeedback(null);
+          busy.current = false;
+          onDone?.();
+        }, wait);
+      });
+    },
+    [],
+  );
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-    if (unsubscribe.current) unsubscribe.current();
-  }, []);
-  return { feedback, show };
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (unsubscribe.current) unsubscribe.current();
+    },
+    [],
+  );
+  /** True while a feedback is still being said: used as a short lock. */
+  const isBusy = feedback !== null;
+  return { feedback, show, isBusy, busyRef: busy };
 }
 
 export function FeedbackPopup({ message }: { message: FeedbackMessage }) {
