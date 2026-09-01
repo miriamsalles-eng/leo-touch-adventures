@@ -12,10 +12,9 @@ export function useInstructionSpeech(text: string | null, active: boolean, trigg
   const last = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!active || !text) {
-      last.current = null;
-      return;
-    }
+    /* Going temporarily inactive (a feedback is talking) must NOT make the
+       same instruction start again: only a new round/text does. */
+    if (!active || !text) return;
     const key = `${String(triggerKey)}:${text}`;
     if (last.current === key) return;
     last.current = key;
