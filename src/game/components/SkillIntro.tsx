@@ -32,7 +32,7 @@ export function SkillIntro({
 }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
-  const spoken = useRef<number | null>(null);
+  const spoken = useRef<{ index: number; id: number } | null>(null);
   const doneRef = useRef(onComplete);
   doneRef.current = onComplete;
 
@@ -40,15 +40,20 @@ export function SkillIntro({
     if (!visible) return;
     const step = steps[index];
     if (!step) return;
-    if (spoken.current === index) return;
-    spoken.current = index;
+    /* The skill sentence is spoken and stays on screen for the whole audio
+       plus ~1s, respecting a 4s minimum when the sound is off. A repeated
+       effect run reuses the same request instead of speaking twice. */
+    let id: number;
+    if (spoken.current && spoken.current.index === index) {
+      id = spoken.current.id;
+    } else {
+      id = speech.speak(step.text);
+      spoken.current = { index, id };
+    }
 
     const startedAt = Date.now();
     let hold: ReturnType<typeof setTimeout> | null = null;
 
-    /* The skill sentence is spoken and stays on screen for the whole audio
-       plus ~1s, respecting a 4s minimum when the sound is off. */
-    const id = speech.speak(step.text);
     const unsubscribe = speech.onEnd(id, () => {
       const wait = Math.max(TIMING.POST_SPEECH_DELAY, durationMs - (Date.now() - startedAt));
       hold = setTimeout(() => {

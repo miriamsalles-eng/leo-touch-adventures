@@ -15,7 +15,7 @@ export function useNarration(
   minMs: number = TIMING.NARRATIVE_MIN,
 ): string | null {
   const [index, setIndex] = useState(0);
-  const spoken = useRef<string | null>(null);
+  const spoken = useRef<{ key: string; id: number } | null>(null);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
 
@@ -27,14 +27,19 @@ export function useNarration(
     }
     const line = lines[Math.min(index, lines.length - 1)]!;
     const key = `${index}:${line}`;
-    /* Guards against a double effect run for the same line only. */
-    if (spoken.current === key) return;
-    spoken.current = key;
+    /* A re-run of the same effect (dev double invoke) reuses the SAME request
+       instead of speaking twice — and still waits for its end. */
+    let id: number;
+    if (spoken.current && spoken.current.key === key) {
+      id = spoken.current.id;
+    } else {
+      id = speech.speak(line);
+      spoken.current = { key, id };
+    }
 
     const startedAt = Date.now();
     let hold: ReturnType<typeof setTimeout> | null = null;
 
-    const id = speech.speak(line);
     const unsubscribe = speech.onEnd(id, () => {
       const elapsed = Date.now() - startedAt;
       const wait = Math.max(TIMING.POST_SPEECH_DELAY, minMs - elapsed);
