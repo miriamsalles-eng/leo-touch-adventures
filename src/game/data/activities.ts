@@ -24,13 +24,15 @@ export type Activity = {
   params?: Record<string, number | string>;
 };
 
+/**
+ * Only generic ORIENTATION messages live here. Every positive feedback is
+ * contextual and belongs to its own activity ("Lápis guardado!"), so the
+ * child always hears WHAT she managed to do.
+ */
 export const FEEDBACK = {
-  yes: "Isso!",
-  did: "Você conseguiu!",
   almost: "Quase! Tente novamente.",
   holding: "Continue segurando enquanto move.",
   keepOnPath: "Volte para o caminho.",
-  nice: "Muito bem, obrigado!",
 } as const;
 
 export const ACTIVITIES: Activity[] = [
