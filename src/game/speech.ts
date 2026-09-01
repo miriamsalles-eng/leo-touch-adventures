@@ -38,7 +38,6 @@ let token = 0;
 /** Text currently being spoken OR queued to be spoken next. */
 let activeText: string | null = null;
 let busy = false;
-let programmaticCancel = false;
 let pending: { text: string; id: number } | null = null;
 let safety: ReturnType<typeof setTimeout> | null = null;
 
@@ -161,13 +160,11 @@ export const speech = {
     if (safety) clearTimeout(safety);
     safety = null;
     if (synth) {
-      programmaticCancel = true;
       try {
         synth.cancel();
       } catch {
         /* ignore */
       }
-      programmaticCancel = false;
     }
     for (const id of [...waiters.keys()]) flush(id);
   },
@@ -199,13 +196,11 @@ export const speech = {
 
     pending = null;
     if (busy) {
-      programmaticCancel = true;
       try {
         synth.cancel();
       } catch {
         /* ignore */
       }
-      programmaticCancel = false;
     }
     void programmaticCancel;
     startUtterance(text, id);
