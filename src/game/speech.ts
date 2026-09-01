@@ -181,7 +181,10 @@ export const speech = {
     activeText = text;
     flushOthers(id);
 
-    if (!synth || !enabled || muted) {
+    if (voices.length === 0) loadVoices();
+    /* No synthesiser, no gesture yet, muted, or a system with no voices:
+       the text still shows and the minimum reading times take over. */
+    if (!synth || !enabled || muted || voices.length === 0) {
       busy = false;
       pending = null;
       /* No voice: waiters resolve at once and minimum reading times rule. */
