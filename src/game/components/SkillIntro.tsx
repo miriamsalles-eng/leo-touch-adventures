@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 export type SkillIntroStep = {
   /** Short sentence naming the skill: "Agora vamos aprender a clicar!" */
   text: string;
+  /** Tiny top layer: "Aprendendo: clicar" / "Praticando: arrastar". */
+  label?: string | undefined;
   /** Small supporting icon (UI.gestureMove, UI.soundOn, ...). */
   icon?: string | undefined;
 };
+
 
 /** Default display time for skill introduction banners (ms). */
 export const SKILL_INTRO_DURATION = 4000;
