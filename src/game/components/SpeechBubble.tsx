@@ -29,11 +29,11 @@ export function SpeechBubble({
   width = 340,
   tone = "normal",
 }: SpeechBubbleProps) {
-  /* The bubble is the single narrator of Leo lines: whenever the text
-     changes it is spoken once (never two voices at the same time). */
-  useEffect(() => {
-    speech.speak(text);
-  }, [text]);
+  /* The bubble only DISPLAYS the line. Who starts a narration is the owner of
+     that message type (useNarration, useInstructionSpeech, SkillIntro,
+     useFeedback) — never the bubble itself. */
+
+
 
   const margin = 32;
   const gap = 26;
