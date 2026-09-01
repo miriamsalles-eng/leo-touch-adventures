@@ -8,6 +8,7 @@ import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { distance, usePointerTracking } from "../hooks/usePointerTracking";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[1]!;
@@ -25,6 +26,11 @@ const ROUNDS = [
   { x: 640, y: 400, hint: "Agora me encontre aqui!" },
 ];
 
+/** Leo introduces himself before the very first practice. */
+const HELLO = ["Oi! Eu sou o Leo! Vamos brincar?", "Eu vou mudar de lugar. Leve a setinha até mim!"];
+/** Narrative bridge to the clicking activity — no extra screen, no extra click. */
+const OUTRO = ["Nossa! Você me encontrou todas as vezes!", "Agora vou pedir um objeto. Quando encontrar, clique nele!"];
+
 export function S02FindLeo({
   onComplete,
   progress,
@@ -32,18 +38,22 @@ export function S02FindLeo({
   onComplete: () => void;
   progress: { total: number; current: number };
 }) {
+  const [started, setStarted] = useState(false);
   const [round, setRound] = useState(0);
   const [hover, setHover] = useState(false);
   const [done, setDone] = useState(false);
-  const { point } = usePointerTracking(!done);
+  const { point } = usePointerTracking(started && !done);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const hello = useNarration(HELLO, !started, () => setStarted(true));
+  const outro = useNarration(OUTRO, done, onComplete);
+
   const spot = ROUNDS[round]!;
 
   useEffect(() => {
-    if (done) return;
+    if (done || !started) return;
     const near = point ? distance(point, { x: spot.x, y: spot.y - 130 }) < RADIUS : false;
     setHover(near);
     if (!near) {
@@ -55,7 +65,7 @@ export function S02FindLeo({
     timer.current = setTimeout(() => {
       play("success");
       if (round < ROUNDS.length - 1) {
-        show("Isso! Você moveu a setinha!", "success", 1300);
+        show("Isso! Você me encontrou!", "success", 2000);
         setRound((r) => r + 1);
         setHover(false);
       } else {
@@ -67,14 +77,12 @@ export function S02FindLeo({
       if (timer.current) clearTimeout(timer.current);
       timer.current = null;
     };
-  }, [point, done, round, spot.x, spot.y, play, show]);
+  }, [point, done, started, round, spot.x, spot.y, play, show]);
+
+  const bubble = hello ?? outro ?? (hover ? "Isso!" : spot.hint);
 
   return (
-    <SceneFrame
-      background={BACKGROUNDS.bedroom}
-      progress={progress}
-      onNext={done ? onComplete : undefined}
-    >
+    <SceneFrame background={BACKGROUNDS.bedroom} progress={progress}>
       <Character
         state={done ? "celebrating" : hover ? "happy" : "neutral"}
         x={spot.x}
@@ -84,14 +92,18 @@ export function S02FindLeo({
         glow={hover}
       />
       <SpeechBubble
-        text={done ? "Muito bem! Você me encontrou!" : hover ? "Isso!" : spot.hint}
+        text={bubble}
         anchorX={spot.x}
         anchorY={spot.y - 300}
         anchorWidth={230}
         side="auto"
         tone={hover || done ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ text: "Agora vamos aprender a mover a setinha!", icon: UI.gestureMove }]} />
+      {started && (
+        <SkillIntro
+          steps={[{ label: "Aprendendo: mover", text: "Agora vamos aprender a mover a setinha!", icon: UI.gestureMove }]}
+        />
+      )}
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>

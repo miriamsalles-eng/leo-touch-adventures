@@ -8,6 +8,7 @@ import { SceneFrame } from "../components/SceneFrame";
 import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[4]!;
@@ -24,6 +25,10 @@ const ITEMS = [
 
 const BAG = { x: 700, y: 400 };
 
+/** Story beats: this activity closes the "at home" block. */
+const HELLO = ["Ufa! Quantas brincadeiras!", "Agora vamos guardar tudo na mochila?"];
+const OUTRO = ["Tudo pronto!", "Ainda falta arrumar o quarto!"];
+
 export function S05Backpack({
   onComplete,
   progress,
@@ -35,14 +40,16 @@ export function S05Backpack({
   const [active, setActive] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
+  const [greeted, setGreeted] = useState(false);
 
   const done = stored.length === ITEMS.length;
+  const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
+  const outro = useNarration(OUTRO, done, onComplete);
 
   return (
     <SceneFrame
       background={BACKGROUNDS.bedroom}
       progress={progress}
-      onNext={done ? onComplete : undefined}
     >
       <Character state={done ? "celebrating" : "pointing"} x={1140} y={615} height={255} bob={!done} />
 
@@ -91,7 +98,7 @@ export function S05Backpack({
       )}
 
       <SpeechBubble
-        text={done ? "Muito bem! Minha mochila está pronta!" : "Guarde tudo na minha mochila!"}
+        text={hello ?? outro ?? "Guarde tudo na minha mochila!"}
         anchorX={1140}
         anchorY={365}
         anchorWidth={200}
@@ -99,7 +106,7 @@ export function S05Backpack({
         width={300}
         tone={done ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ text: "Vamos praticar o que aprendemos!", icon: UI.gestureDrop }]} />
+      <SkillIntro steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos praticar o que aprendemos!", icon: UI.gestureDrop }]} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

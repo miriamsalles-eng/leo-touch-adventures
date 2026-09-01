@@ -2,11 +2,11 @@ import { useRef, useState } from "react";
 import { FEEDBACK } from "../data/activities";
 import { OBJECTS, UI } from "../assets";
 import { DraggableLeo } from "../components/DraggableLeo";
-import { GameButton } from "../components/GameButton";
 import { SceneFrame } from "../components/SceneFrame";
 import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 export type Point = { x: number; y: number };
@@ -22,6 +22,12 @@ export type PathSceneProps = {
   hint: string;
   /** Short one-time sentence naming what this trail practises. */
   intro?: string | undefined;
+  /** Tiny skill tag shown above the intro sentence ("Praticando: arrastar"). */
+  introLabel?: string | undefined;
+  /** Leo lines said before the trail starts (story reason to walk it). */
+  prelude?: string[] | undefined;
+  /** Leo lines said after arriving, bridging to the next activity. */
+  outro?: string[] | undefined;
   successText: string;
   onComplete: () => void;
   progress: { total: number; current: number };
@@ -54,6 +60,9 @@ export function PathScene({
   goalImage = OBJECTS.cheese,
   hint,
   intro,
+  introLabel,
+  prelude = [],
+  outro = [],
   successText,
   onComplete,
   progress,
@@ -61,15 +70,18 @@ export function PathScene({
   const start = points[0]!;
   const goal = points[points.length - 1]!;
   const [done, setDone] = useState(false);
+  const [ready, setReady] = useState(prelude.length === 0);
   const safe = useRef<Point>(start);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
+  const preludeLine = useNarration(prelude, !ready, () => setReady(true));
+  const outroLine = useNarration(outro, done, onComplete);
 
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   return (
     <SceneFrame background={background} progress={progress}>
-      {intro && <SkillIntro steps={[{ text: intro, icon: UI.gestureDrag }]} />}
+      {intro && ready && <SkillIntro steps={[{ label: introLabel, text: intro, icon: UI.gestureDrag }]} />}
       <svg className="pointer-events-none absolute inset-0" width={1280} height={720} aria-hidden="true">
         <path
           d={d}
@@ -101,7 +113,7 @@ export function PathScene({
         start={start}
         size={leoSize}
         state={done ? "celebrating" : "neutral"}
-        disabled={done}
+        disabled={done || !ready}
         onPickup={() => play("pick")}
         onMove={(p, _z, setPos) => {
           if (done) return;
@@ -120,7 +132,7 @@ export function PathScene({
       />
 
       <SpeechBubble
-        text={done ? successText : hint}
+        text={preludeLine ?? outroLine ?? (done ? successText : hint)}
         anchorX={start.x}
         anchorY={Math.max(start.y - leoSize, 150)}
         anchorWidth={leoSize}
@@ -130,11 +142,6 @@ export function PathScene({
       />
 
       <FeedbackPopup message={feedback} />
-      {done && (
-        <div className="absolute right-8 top-[618px] z-40">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }

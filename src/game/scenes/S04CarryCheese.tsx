@@ -9,6 +9,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[3]!;
@@ -16,8 +17,11 @@ const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
 /** Four rounds, one per direction: right, left, up and down. */
+/** Bridge to the sorting/rocket block of the story. */
+const OUTRO = ["Isso! Você soltou certinho!", "Estou adorando brincar com você!"];
+
 const ROUNDS = [
-  { item: { x: 300, y: 520 }, leo: { x: 1000, y: 620 }, hint: "Arraste o queijo até mim!" },
+  { item: { x: 300, y: 520 }, leo: { x: 1000, y: 620 }, hint: "Clique no queijo, segure e traga até mim!" },
   { item: { x: 1010, y: 520 }, leo: { x: 300, y: 620 }, hint: "Agora arraste para a esquerda!" },
   { item: { x: 660, y: 620 }, leo: { x: 660, y: 340 }, hint: "Agora arraste para cima!" },
   { item: { x: 660, y: 250 }, leo: { x: 660, y: 690 }, hint: "Agora arraste para baixo!" },
@@ -37,24 +41,23 @@ export function S04CarryCheese({
   const [done, setDone] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
+  const outro = useNarration(OUTRO, done, onComplete);
 
   const r = ROUNDS[round]!;
   const target = { x: r.leo.x, y: r.leo.y - 150 };
 
   const bubble =
-    done
-      ? "Muito bem! Você arrastou e soltou!"
-      : step === "holding"
+    outro ??
+    (step === "holding"
         ? "Segure e traga até mim."
-        : step === "over"
-          ? "Agora solte aqui!"
-          : r.hint;
+      : step === "over"
+        ? "Agora solte aqui!"
+        : r.hint);
 
   return (
     <SceneFrame
       background={BACKGROUNDS.bedroom}
       progress={progress}
-      onNext={done ? onComplete : undefined}
     >
       <Character
         state={done ? "celebrating" : step === "over" ? "happy" : "pointing"}
@@ -97,7 +100,7 @@ export function S04CarryCheese({
             }
             play("success");
             if (round < ROUNDS.length - 1) {
-              show(round === 0 ? "Muito bem! Você arrastou!" : "Isso! Você soltou no lugar certo!", "success", 1300);
+              show(round === 0 ? "Isso! Você arrastou!" : "Isso! Você soltou certinho!", "success", 2000);
               setStep("idle");
               setRound((n) => n + 1);
               return "return";
@@ -119,8 +122,8 @@ export function S04CarryCheese({
       />
       <SkillIntro
         steps={[
-          { text: "Agora vamos aprender a arrastar!", icon: UI.gestureDrag },
-          { text: "E soltar no lugar certo!", icon: UI.gestureDrop },
+          { label: "Aprendendo: arrastar", text: "Agora vamos aprender a arrastar!", icon: UI.gestureDrag },
+          { label: "Aprendendo: soltar", text: "E soltar no lugar certo!", icon: UI.gestureDrop },
         ]}
       />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} y={40} x={200} />

@@ -8,6 +8,7 @@ import { SceneFrame } from "../components/SceneFrame";
 import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[10]!;
@@ -25,6 +26,9 @@ const FOODS = [
 const BLANKET = { x: 640, y: 430 };
 const LEO_SPOT = { x: 400, y: 560 };
 
+const HELLO = ["Agora vamos organizar nosso piquenique?"];
+const OUTRO = ["Nosso piquenique está pronto!", "Conseguimos!"];
+
 type Phase = "click" | "fill" | "walk" | "done";
 
 export function S11Picnic({
@@ -40,21 +44,26 @@ export function S11Picnic({
   const [leoHome, setLeoHome] = useState(false);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
+  const [greeted, setGreeted] = useState(false);
+  const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
+  const outro = useNarration(OUTRO, phase === "done", onComplete);
 
   const bubble =
-    phase === "click"
+    hello ??
+    outro ??
+    (phase === "click"
       ? "Clique na cesta para abrir!"
       : phase === "fill"
         ? "Arraste a comida para a toalha!"
         : phase === "walk"
           ? "Agora me leve até a toalha!"
-          : "Muito bem! Piquenique pronto!";
+        : "Muito bem! Piquenique pronto!");
 
   return (
     <SceneFrame
       background={BACKGROUNDS.picnic}
       progress={progress}
-      onNext={phase === "done" ? onComplete : undefined}
+      focus
     >
       {/* Blanket: the picnic table for the food */}
       <img
@@ -203,7 +212,7 @@ export function S11Picnic({
         width={330}
         tone={phase === "done" ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ text: "Vamos usar tudo o que aprendemos!", icon: UI.gestureDrop }]} />
+      <SkillIntro steps={[{ label: "Usando o que aprendemos", text: "Vamos usar tudo o que aprendemos!", icon: UI.gestureDrop }]} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

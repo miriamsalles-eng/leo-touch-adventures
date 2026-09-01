@@ -4,12 +4,12 @@ import { BACKGROUNDS, OBJECTS, UI } from "../assets";
 import { Character } from "../components/Character";
 import { DragItem } from "../components/DragItem";
 import { DropZone } from "../components/DropZone";
-import { GameButton } from "../components/GameButton";
 import { RoundBadge } from "../components/RoundBadge";
 import { SceneFrame } from "../components/SceneFrame";
 import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[5]!;
@@ -31,13 +31,19 @@ const ZONES = [
   { id: "bag", image: OBJECTS.backpack, x: 880, y: 470, label: "mochila" },
 ];
 
+const HELLO = ["Cada coisa tem o seu lugar!"];
+const OUTRO = ["Que quarto arrumado!", "Estou animado! Vamos montar um foguete?"];
+
 /** Activity 5 — four clearly distinct, large targets. */
 export function S06Sorting({ onComplete, progress }: { onComplete: () => void; progress: { total: number; current: number } }) {
   const [placed, setPlaced] = useState<string[]>([]);
   const [over, setOver] = useState<string | null>(null);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
+  const [greeted, setGreeted] = useState(false);
   const done = placed.length === PAIRS.length;
+  const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
+  const outro = useNarration(OUTRO, done, onComplete);
 
   return (
     <SceneFrame background={BACKGROUNDS.bedroom} progress={progress}>
@@ -73,7 +79,7 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
 
       <Character state={done ? "celebrating" : "thinking"} x={1140} y={615} height={235} bob={done} />
       <SpeechBubble
-        text={done ? "Muito bem! Tudo no lugar certo!" : "Coloque cada coisa no seu lugar."}
+        text={hello ?? outro ?? "Coloque cada coisa no seu lugar."}
         anchorX={1140}
         anchorY={385}
         anchorWidth={200}
@@ -107,14 +113,9 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
         />
       ))}
 
-      <SkillIntro steps={[{ text: "Vamos usar o que aprendemos!", icon: UI.gestureDrag }]} />
+      <SkillIntro steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos usar o que aprendemos!", icon: UI.gestureDrag }]} />
       <RoundBadge current={placed.length} total={PAIRS.length} x={200} y={40} />
       <FeedbackPopup message={feedback} />
-      {done && (
-        <div className="absolute right-8 top-[618px] z-40">
-          <GameButton onPress={onComplete}>SEGUIR</GameButton>
-        </div>
-      )}
     </SceneFrame>
   );
 }

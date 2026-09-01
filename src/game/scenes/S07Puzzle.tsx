@@ -8,12 +8,16 @@ import { SceneFrame } from "../components/SceneFrame";
 import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[6]!;
 const SNAP = A.params!["zonePadding"] as number | undefined;
 
 /** Three big, recognizable rocket parts: nose, body and base with fins. */
+const HELLO = ["Vamos montar um foguete?"];
+const OUTRO = ["Nosso foguete ficou ótimo!", "Que tal um passeio no parque?"];
+
 const PIECES = [
   { id: "nose", image: OBJECTS.rocketNose, start: { x: 240, y: 180 }, slot: { x: 800, y: 220 }, w: 210, h: 147 },
   { id: "body", image: OBJECTS.rocketBody, start: { x: 240, y: 400 }, slot: { x: 800, y: 372 }, w: 210, h: 158 },
@@ -33,14 +37,16 @@ export function S07Puzzle({
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
+  const [greeted, setGreeted] = useState(false);
   const done = placed.length === PIECES.length;
+  const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
+  const outro = useNarration(OUTRO, done, onComplete);
   const highlight = dragging || active !== null;
 
   return (
     <SceneFrame
       background={BACKGROUNDS.bedroom}
       progress={progress}
-      onNext={done ? onComplete : undefined}
     >
       {/* Silhouette guide of the finished rocket */}
       <img
@@ -116,9 +122,9 @@ export function S07Puzzle({
         ),
       )}
 
-      <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} />
+      <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} flip={!done} />
       <SpeechBubble
-        text={done ? "Muito bem! Foguete pronto!" : "Monte o foguete!"}
+        text={hello ?? outro ?? "Leve cada peça para o lugar certo."}
         anchorX={1165}
         anchorY={400}
         anchorWidth={200}
@@ -126,7 +132,7 @@ export function S07Puzzle({
         width={290}
         tone={done ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ text: "Agora vamos controlar melhor o movimento!", icon: UI.gestureMove }]} />
+      <SkillIntro steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos montar um foguete!", icon: UI.gestureMove }]} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

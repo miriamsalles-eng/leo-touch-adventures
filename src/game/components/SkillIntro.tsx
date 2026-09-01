@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 export type SkillIntroStep = {
   /** Short sentence naming the skill: "Agora vamos aprender a clicar!" */
   text: string;
+  /** Tiny top layer: "Aprendendo: clicar" / "Praticando: arrastar". */
+  label?: string | undefined;
   /** Small supporting icon (UI.gestureMove, UI.soundOn, ...). */
   icon?: string | undefined;
 };
+
 
 /** Default display time for skill introduction banners (ms). */
 export const SKILL_INTRO_DURATION = 4000;
@@ -38,7 +41,15 @@ export function SkillIntro({ steps, durationMs = SKILL_INTRO_DURATION }: { steps
       aria-live="polite"
     >
       {step.icon && <img src={step.icon} alt="" className="h-[42px] w-[42px] object-contain" />}
-      <span className="whitespace-nowrap font-display text-[26px] text-[var(--primary-deep)]">{step.text}</span>
+      <div className="flex flex-col items-start leading-tight">
+        {step.label && (
+          <span className="whitespace-nowrap font-display text-[15px] uppercase tracking-wide text-[var(--secondary-deep)] opacity-80">
+            {step.label}
+          </span>
+        )}
+        <span className="whitespace-nowrap font-display text-[26px] text-[var(--primary-deep)]">{step.text}</span>
+      </div>
     </div>
   );
+
 }
