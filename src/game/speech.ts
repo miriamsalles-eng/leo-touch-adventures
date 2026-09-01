@@ -202,7 +202,6 @@ export const speech = {
         /* ignore */
       }
     }
-    void programmaticCancel;
     startUtterance(text, id);
   },
   /** Repeats the given line without touching the activity state. */
