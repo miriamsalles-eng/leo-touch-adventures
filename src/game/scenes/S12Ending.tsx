@@ -23,7 +23,7 @@ const LINES = [
 /** Closing scene: picnic area, Leo big and in focus, then RECOMEÇAR. */
 export function S12Ending({ onRestart }: { onRestart: () => void }) {
   const [finished, setFinished] = useState(false);
-  const line = useNarration(LINES, !finished, () => setFinished(true), 3200);
+  const line = useNarration(LINES, !finished, () => setFinished(true));
 
   return (
     <SceneFrame background={BACKGROUNDS.picnic}>
