@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { STAGE_W } from "../stage";
+import { TIMING, speech } from "../speech";
 
 export type FeedbackTone = "success" | "gentle";
 export type FeedbackMessage = { text: string; tone: FeedbackTone } | null;
@@ -8,16 +9,30 @@ export type FeedbackMessage = { text: string; tone: FeedbackTone } | null;
 export function useFeedback() {
   const [feedback, setFeedback] = useState<FeedbackMessage>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unsubscribe = useRef<(() => void) | null>(null);
 
-  /** Standard durations: success ~3s, gentle retry ~2.2s. */
+  /**
+   * The feedback is spoken and stays visible for the whole narration plus a
+   * short pause; `ms` acts as the minimum reading time when there is no voice.
+   */
   const show = useCallback((text: string, tone: FeedbackTone = "success", ms?: number) => {
-    const duration = ms ?? (tone === "success" ? 3000 : 2200);
+    const min = ms ?? (tone === "success" ? TIMING.ROUND_FEEDBACK_MIN : TIMING.GENTLE_FEEDBACK_MIN);
+    const startedAt = Date.now();
     setFeedback({ text, tone });
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setFeedback(null), duration);
+    if (unsubscribe.current) unsubscribe.current();
+
+    speech.speak(text, { interrupt: true, force: true });
+    unsubscribe.current = speech.onEnd(text, () => {
+      const wait = Math.max(TIMING.FEEDBACK_POST_SPEECH_DELAY, min - (Date.now() - startedAt));
+      timer.current = setTimeout(() => setFeedback(null), wait);
+    });
   }, []);
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+    if (unsubscribe.current) unsubscribe.current();
+  }, []);
   return { feedback, show };
 }
 
