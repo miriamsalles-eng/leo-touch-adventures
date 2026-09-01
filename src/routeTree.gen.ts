@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Qa12RouteImport } from './routes/qa12'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Qa12Route = Qa12RouteImport.update({
+  id: '/qa12',
+  path: '/qa12',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/qa12': typeof Qa12Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/qa12': typeof Qa12Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/qa12': typeof Qa12Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/qa12'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/qa12'
+  id: '__root__' | '/' | '/qa12'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  Qa12Route: typeof Qa12Route
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/qa12': {
+      id: '/qa12'
+      path: '/qa12'
+      fullPath: '/qa12'
+      preLoaderRoute: typeof Qa12RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  Qa12Route: Qa12Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
