@@ -9,6 +9,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[10]!;
@@ -17,10 +18,10 @@ const PADDING = A.params!["zonePadding"] as number;
 
 /** Foods come from different directions, so every drag is a new movement. */
 const FOODS = [
-  { id: "cheese", image: OBJECTS.cheese, x: 250, y: 250 },
-  { id: "grape", image: OBJECTS.grape, x: 1030, y: 260 },
-  { id: "apple", image: OBJECTS.apple, x: 1060, y: 560 },
-  { id: "banana", image: OBJECTS.banana, x: 250, y: 590 },
+  { id: "cheese", image: OBJECTS.cheese, x: 250, y: 250, done: "Queijo na toalha!" },
+  { id: "grape", image: OBJECTS.grape, x: 1030, y: 260, done: "Uvas no lugar!" },
+  { id: "apple", image: OBJECTS.apple, x: 1060, y: 560, done: "Maçã no piquenique!" },
+  { id: "banana", image: OBJECTS.banana, x: 250, y: 590, done: "Banana na toalha!" },
 ];
 
 const BLANKET = { x: 640, y: 430 };
@@ -42,11 +43,24 @@ export function S11Picnic({
   const [placed, setPlaced] = useState<string[]>([]);
   const [active, setActive] = useState(false);
   const [leoHome, setLeoHome] = useState(false);
-  const { feedback, show } = useFeedback();
+  const { feedback, show, isBusy } = useFeedback();
   const { play } = useAudio();
   const [greeted, setGreeted] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, phase === "done", onComplete);
+  const ready = greeted && introDone && !isBusy;
+  useInstructionSpeech(
+    phase === "click"
+      ? "Clique na cesta para abrir!"
+      : phase === "fill"
+        ? "Arraste a comida para a toalha!"
+        : phase === "walk"
+          ? "Agora me leve até a toalha!"
+          : null,
+    ready && phase !== "done",
+    `${phase}-${placed.length}`,
+  );
 
   const bubble =
     hello ??
@@ -57,7 +71,7 @@ export function S11Picnic({
         ? "Arraste a comida para a toalha!"
         : phase === "walk"
           ? "Agora me leve até a toalha!"
-        : "Muito bem! Piquenique pronto!");
+        : "Piquenique pronto!");
 
   return (
     <SceneFrame
@@ -86,9 +100,10 @@ export function S11Picnic({
           aria-label="Abrir a cesta"
           onPointerDown={(e) => {
             e.preventDefault();
+            if (isBusy) return;
             play("click");
-            show(FEEDBACK.yes, "success");
-            setPhase("fill");
+            /* The food instruction only starts after this feedback ended. */
+            show("A cesta abriu!", "success", undefined, () => setPhase("fill"));
           }}
           className="absolute animate-pop-in transition-transform duration-150 hover:scale-110"
           style={{ left: 640, top: 380, width: 210, height: 210, transform: "translate(-50%, -50%)" }}
@@ -135,6 +150,7 @@ export function S11Picnic({
               start={{ x: f.x, y: f.y }}
               size={SIZE}
               label={f.id}
+              disabled={isBusy}
               onPickup={() => play("pick")}
               onZoneChange={(zone) => setActive(zone === "blanket")}
               onDrop={(zone) => {
@@ -147,10 +163,9 @@ export function S11Picnic({
                 const next = [...placed, f.id];
                 setPlaced(next);
                 if (next.length === FOODS.length) {
-                  show(FEEDBACK.nice, "success");
-                  setPhase("walk");
+                  show("Tudo pronto para o piquenique!", "success", undefined, () => setPhase("walk"));
                 } else {
-                  show(FEEDBACK.yes, "success");
+                  show(f.done, "success");
                 }
                 return "stay";
               }}
@@ -212,7 +227,12 @@ export function S11Picnic({
         width={330}
         tone={phase === "done" ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ label: "Usando o que aprendemos", text: "Vamos usar tudo o que aprendemos!", icon: UI.gestureDrop }]} />
+      {greeted && (
+        <SkillIntro
+          steps={[{ label: "Usando o que aprendemos", text: "Vamos usar tudo o que aprendemos!", icon: UI.gestureDrop }]}
+          onComplete={() => setIntroDone(true)}
+        />
+      )}
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

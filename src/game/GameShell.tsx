@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { DragDropProvider } from "./dragdrop";
 import { Stage } from "./stage";
 import { AudioProvider, useAudio } from "./hooks/useAudio";
@@ -27,15 +27,16 @@ function Flow() {
   const [session, setSession] = useState(0);
   const { start, setMuted } = useAudio();
 
-  const next = useCallback(() => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1)), []);
+  /* The old voice is cancelled BEFORE the new scene mounts its own lines, so
+     no post-render effect can ever cut the first sentence of a new scene. */
+  const next = useCallback(() => {
+    speech.cancel();
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
+  }, []);
   const begin = useCallback(() => {
     start();
     next();
   }, [start, next]);
-  /* No line of a previous scene may keep talking after a transition. */
-  useEffect(() => {
-    speech.cancel();
-  }, [step, session]);
 
   const restart = useCallback(() => {
     speech.cancel();

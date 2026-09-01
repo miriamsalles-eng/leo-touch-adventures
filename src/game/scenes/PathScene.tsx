@@ -7,6 +7,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 export type Point = { x: number; y: number };
@@ -71,17 +72,25 @@ export function PathScene({
   const goal = points[points.length - 1]!;
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(prelude.length === 0);
+  const [introDone, setIntroDone] = useState(!intro);
   const safe = useRef<Point>(start);
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
   const preludeLine = useNarration(prelude, !ready, () => setReady(true));
   const outroLine = useNarration(outro, done, onComplete);
+  /* Instruction speaks only after the prelude and the skill banner. */
+  useInstructionSpeech(hint, ready && introDone && !done, 0);
 
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   return (
     <SceneFrame background={background} progress={progress}>
-      {intro && ready && <SkillIntro steps={[{ label: introLabel, text: intro, icon: UI.gestureDrag }]} />}
+      {intro && ready && (
+        <SkillIntro
+          steps={[{ label: introLabel, text: intro, icon: UI.gestureDrag }]}
+          onComplete={() => setIntroDone(true)}
+        />
+      )}
       <svg className="pointer-events-none absolute inset-0" width={1280} height={720} aria-hidden="true">
         <path
           d={d}
@@ -113,7 +122,7 @@ export function PathScene({
         start={start}
         size={leoSize}
         state={done ? "celebrating" : "neutral"}
-        disabled={done || !ready}
+        disabled={done || !ready || !introDone}
         onPickup={() => play("pick")}
         onMove={(p, _z, setPos) => {
           if (done) return;
@@ -125,7 +134,7 @@ export function PathScene({
             }
           } else {
             setPos(safe.current);
-            show(FEEDBACK.keepOnPath, "gentle", 1200);
+            show(FEEDBACK.keepOnPath, "gentle");
           }
         }}
         onDrop={() => (done ? "stay" : { x: safe.current.x, y: safe.current.y })}

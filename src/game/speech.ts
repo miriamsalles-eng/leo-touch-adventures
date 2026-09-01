@@ -5,6 +5,9 @@
  * presentation, instruction and pedagogical feedback can be narrated by the
  * browser's own voice — no recorded files, no external services.
  *
+ * Every request has its OWN identity: the same sentence can be narrated again
+ * in a later round. Nothing is ever blocked because "the text is equal".
+ *
  * Speech is a complementary accessibility layer: if it is unavailable, muted
  * or blocked, nothing is hidden and nothing is blocked; the minimum reading
  * times below take over.
@@ -28,20 +31,30 @@ export const TIMING = {
 
 type Waiter = () => void;
 
+/** One speech request. `id` — never the text — identifies it. */
+type Request = {
+  id: number;
+  text: string;
+  /** A replay: it must not resolve anything but the line it interrupted. */
+  standalone: boolean;
+  /** Request whose waiters were postponed because a replay interrupted it. */
+  deferred: number | null;
+};
+
 const synth: SpeechSynthesis | null =
   typeof window !== "undefined" && "speechSynthesis" in window ? window.speechSynthesis : null;
 
 let voices: SpeechSynthesisVoice[] = [];
 let enabled = false;
 let muted = false;
-let token = 0;
-/** Text currently being spoken OR queued to be spoken next. */
-let activeText: string | null = null;
-let busy = false;
-let pending: { text: string; id: number } | null = null;
-let safety: ReturnType<typeof setTimeout> | null = null;
+let nextId = 1;
 
+let active: Request | null = null;
+let queue: Request[] = [];
+/** Ids already finished (or resolved without voice) but not yet observed. */
+const finished = new Set<number>();
 const waiters = new Map<number, Set<Waiter>>();
+let safety: ReturnType<typeof setTimeout> | null = null;
 
 function loadVoices() {
   if (!synth) return;
@@ -72,7 +85,8 @@ function pickVoice(): SpeechSynthesisVoice | undefined {
   );
 }
 
-function flush(id: number) {
+function resolve(id: number) {
+  finished.add(id);
   const set = waiters.get(id);
   waiters.delete(id);
   set?.forEach((cb) => {
@@ -84,22 +98,38 @@ function flush(id: number) {
   });
 }
 
-/** Releases every waiter of ids other than the current one. */
-function flushOthers(keep: number) {
-  for (const id of [...waiters.keys()]) if (id !== keep) flush(id);
+/** Forgets a request without notifying anybody (used on hard cancel). */
+function drop(id: number) {
+  waiters.delete(id);
+  finished.delete(id);
 }
 
 function estimateMs(text: string) {
   return Math.max(2500, text.length * 110 + 1500);
 }
 
-function startUtterance(text: string, id: number) {
-  if (!synth) {
-    busy = false;
-    flush(id);
+function canSpeak() {
+  if (voices.length === 0) loadVoices();
+  return Boolean(synth) && enabled && !muted && voices.length > 0;
+}
+
+function pump() {
+  if (active) return;
+  const req = queue.shift();
+  if (!req) return;
+  active = req;
+
+  if (!canSpeak()) {
+    /* No voice: the request resolves at once and the minimum reading
+       times take over. Never block the activity. */
+    active = null;
+    resolve(req.id);
+    if (req.deferred !== null) resolve(req.deferred);
+    pump();
     return;
   }
-  const u = new SpeechSynthesisUtterance(text);
+
+  const u = new SpeechSynthesisUtterance(req.text);
   u.lang = "pt-BR";
   const voice = pickVoice();
   if (voice) u.voice = voice;
@@ -108,31 +138,36 @@ function startUtterance(text: string, id: number) {
   u.volume = 1;
 
   const finish = () => {
-    if (id !== token) return;
-    busy = false;
+    /* Only the request that is actually speaking may finish itself. */
+    if (active !== req) return;
+    active = null;
     if (safety) clearTimeout(safety);
     safety = null;
-    flush(id);
-    if (pending) {
-      const next = pending;
-      pending = null;
-      busy = true;
-      startUtterance(next.text, next.id);
-    }
+    resolve(req.id);
+    if (req.deferred !== null) resolve(req.deferred);
+    pump();
   };
 
   u.onend = finish;
   u.onerror = finish;
 
-  busy = true;
   if (safety) clearTimeout(safety);
   /* Some platforms silently drop the end event — never hang the activity. */
-  safety = setTimeout(finish, estimateMs(text) * 2);
+  safety = setTimeout(finish, estimateMs(req.text) * 2);
 
   try {
-    synth.speak(u);
+    synth!.speak(u);
   } catch {
     finish();
+  }
+}
+
+function stopSynth() {
+  if (!synth) return;
+  try {
+    synth.cancel();
+  } catch {
+    /* ignore */
   }
 }
 
@@ -149,79 +184,85 @@ export const speech = {
     enabled = true;
   },
   setMuted(value: boolean) {
+    if (muted === value) return;
     muted = value;
-    if (value) speech.cancel();
+    /* Turning the sound off must never freeze a narration in progress:
+       pending waiters are released so the reading times take over. */
+    if (value) speech.cancel({ release: true });
   },
-  cancel() {
-    token++;
-    pending = null;
-    busy = false;
-    activeText = null;
+  /**
+   * Stops everything. `release` resolves the pending waiters (mute), while the
+   * default silently forgets them (scene change / restart).
+   */
+  cancel(opts?: { release?: boolean }) {
+    const release = opts?.release === true;
+    const pending: Request[] = [...(active ? [active] : []), ...queue];
+    active = null;
+    queue = [];
     if (safety) clearTimeout(safety);
     safety = null;
-    if (synth) {
-      try {
-        synth.cancel();
-      } catch {
-        /* ignore */
+    stopSynth();
+    for (const req of pending) {
+      if (release) {
+        resolve(req.id);
+        if (req.deferred !== null) resolve(req.deferred);
+      } else {
+        drop(req.id);
+        if (req.deferred !== null) drop(req.deferred);
       }
     }
-    for (const id of [...waiters.keys()]) flush(id);
+    if (!release) {
+      for (const id of [...waiters.keys()]) drop(id);
+      finished.clear();
+    }
   },
   /**
-   * Speaks a line. By default the same text is never repeated and a new line
-   * waits politely for the current one (feedback then next instruction —
-   * never two voices at once). `interrupt` cuts the current line off.
+   * Queues a line and returns the id of THIS request. Adding a line never
+   * interrupts nor invalidates the line currently being spoken.
    */
-  speak(text: string, opts?: { interrupt?: boolean; force?: boolean }) {
-    if (!text) return;
-    if (!opts?.force && text === activeText) return;
-
-    const id = ++token;
-    activeText = text;
-    flushOthers(id);
-
-    if (voices.length === 0) loadVoices();
-    /* No synthesiser, no gesture yet, muted, or a system with no voices:
-       the text still shows and the minimum reading times take over. */
-    if (!synth || !enabled || muted || voices.length === 0) {
-      busy = false;
-      pending = null;
-      /* No voice: waiters resolve at once and minimum reading times rule. */
-      setTimeout(() => flush(id), 0);
-      return;
+  speak(text: string): number {
+    const id = nextId++;
+    if (!text) {
+      finished.add(id);
+      return id;
     }
-
-    if (busy && !opts?.interrupt) {
-      pending = { text, id };
-      return;
-    }
-
-    pending = null;
-    if (busy) {
-      try {
-        synth.cancel();
-      } catch {
-        /* ignore */
-      }
-    }
-    startUtterance(text, id);
+    queue.push({ id, text, standalone: false, deferred: null });
+    pump();
+    return id;
   },
-  /** Repeats the given line without touching the activity state. */
+  /**
+   * Repeats the visible line without touching any state: it interrupts the
+   * current voice and, when it ends, releases the interrupted request so the
+   * sequence resumes exactly where it was.
+   */
   replay(text: string) {
-    speech.speak(text, { interrupt: true, force: true });
+    if (!text) return;
+    const interrupted = active;
+    if (interrupted) {
+      active = null;
+      if (safety) clearTimeout(safety);
+      safety = null;
+      stopSynth();
+    }
+    queue.unshift({
+      id: nextId++,
+      text,
+      standalone: true,
+      deferred: interrupted ? interrupted.id : null,
+    });
+    pump();
   },
   /**
-   * Runs `cb` when the given line finishes speaking. If there is no voice
-   * (unavailable, muted, not yet enabled) it resolves immediately, so callers
-   * fall back to their minimum reading time.
+   * Runs `cb` when THAT request finishes. Unknown or already finished ids
+   * resolve immediately, so callers fall back to their minimum reading time.
    */
-  onEnd(text: string, cb: Waiter): () => void {
-    if (activeText !== text || (!busy && pending === null)) {
+  onEnd(id: number, cb: Waiter): () => void {
+    const known = active?.id === id || queue.some((r) => r.id === id);
+    if (!known) {
+      finished.delete(id);
       const t = setTimeout(cb, 0);
       return () => clearTimeout(t);
     }
-    const id = pending?.text === text ? pending.id : token;
     let set = waiters.get(id);
     if (!set) {
       set = new Set();
