@@ -7,6 +7,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
+import { useNarration } from "../hooks/useNarration";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[2]!;
@@ -18,7 +19,7 @@ type Round = { hint: string; items: Item[] };
 /** Four rounds: move, position and click. Objects change place every round. */
 const ROUNDS: Round[] = [
   {
-    hint: "Clique no queijo!",
+    hint: "Onde está o queijo? Clique nele!",
     items: [
       { id: "apple", image: OBJECTS.apple, x: 480, y: 300, correct: false },
       { id: "cheese", image: OBJECTS.cheese, x: 760, y: 300, correct: true },
@@ -26,7 +27,7 @@ const ROUNDS: Round[] = [
     ],
   },
   {
-    hint: "Clique na bola!",
+    hint: "Agora procure a bola!",
     items: [
       { id: "ball", image: OBJECTS.ball, x: 470, y: 470, correct: true },
       { id: "cheese", image: OBJECTS.cheese, x: 700, y: 290, correct: false },
@@ -34,7 +35,7 @@ const ROUNDS: Round[] = [
     ],
   },
   {
-    hint: "Clique na maçã!",
+    hint: "E a maçã, onde está?",
     items: [
       { id: "ball", image: OBJECTS.ball, x: 460, y: 320, correct: false },
       { id: "apple", image: OBJECTS.apple, x: 880, y: 320, correct: true },
@@ -42,7 +43,7 @@ const ROUNDS: Round[] = [
     ],
   },
   {
-    hint: "Clique na banana!",
+    hint: "Falta a banana! Clique nela!",
     items: [
       { id: "banana", image: OBJECTS.banana, x: 640, y: 300, correct: true },
       { id: "ball", image: OBJECTS.ball, x: 900, y: 480, correct: false },
@@ -50,6 +51,9 @@ const ROUNDS: Round[] = [
     ],
   },
 ];
+
+/** Bridge into the dragging activity. */
+const OUTRO = ["Você encontrou os objetos!", "Agora pode me ajudar a pegá-los?"];
 
 export function S03ClickCheese({
   onComplete,
@@ -63,6 +67,7 @@ export function S03ClickCheese({
   const { feedback, show } = useFeedback();
   const { play } = useAudio();
 
+  const outro = useNarration(OUTRO, done, onComplete);
   const r = ROUNDS[round]!;
 
   const press = (item: Item) => {
@@ -74,7 +79,7 @@ export function S03ClickCheese({
     }
     play("success");
     if (round < ROUNDS.length - 1) {
-      show("Isso! Você clicou!", "success", 1300);
+      show("Isso! Você encontrou!", "success", 2000);
       setRound((n) => n + 1);
     } else {
       setDone(true);
@@ -82,14 +87,10 @@ export function S03ClickCheese({
   };
 
   return (
-    <SceneFrame
-      background={BACKGROUNDS.bedroom}
-      progress={progress}
-      onNext={done ? onComplete : undefined}
-    >
+    <SceneFrame background={BACKGROUNDS.bedroom} progress={progress} focus>
       <Character state={done ? "celebrating" : "pointing"} x={175} y={700} height={265} bob={!done} />
       <SpeechBubble
-        text={done ? "Muito bem! Você clicou muito bem!" : r.hint}
+        text={outro ?? r.hint}
         anchorX={185}
         anchorY={435}
         anchorWidth={200}
@@ -111,16 +112,11 @@ export function S03ClickCheese({
             className="absolute animate-pop-in rounded-full transition-transform duration-150 hover:scale-110 focus-visible:outline-4"
             style={{ left: item.x, top: item.y, width: SIZE, height: SIZE, transform: "translate(-50%, -50%)" }}
           >
-            <img
-              src={item.image}
-              alt=""
-              draggable={false}
-              className="h-full w-full object-contain drop-shadow-[0_10px_14px_rgba(20,60,80,0.25)]"
-            />
+            <img src={item.image} alt="" draggable={false} className="obj-halo h-full w-full object-contain" />
           </button>
         ))}
 
-      <SkillIntro steps={[{ text: "Agora vamos aprender a clicar!", icon: UI.gestureClick }]} />
+      <SkillIntro steps={[{ label: "Aprendendo: clicar", text: "Agora vamos aprender a clicar!", icon: UI.gestureClick }]} />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} />
       <FeedbackPopup message={feedback} />
     </SceneFrame>
