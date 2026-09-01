@@ -9,6 +9,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[4]!;
@@ -17,10 +18,10 @@ const PADDING = A.params!["zonePadding"] as number;
 
 /** Four items around the backpack: left, right, above and below. */
 const ITEMS = [
-  { id: "pencil", image: OBJECTS.pencil, x: 700, y: 170 },
-  { id: "notebook", image: OBJECTS.notebook, x: 300, y: 400 },
-  { id: "pencilcase", image: OBJECTS.pencilcase, x: 985, y: 400 },
-  { id: "book", image: OBJECTS.book, x: 480, y: 620 },
+  { id: "pencil", image: OBJECTS.pencil, x: 700, y: 170, done: "Lápis guardado!" },
+  { id: "notebook", image: OBJECTS.notebook, x: 300, y: 400, done: "Caderno na mochila!" },
+  { id: "pencilcase", image: OBJECTS.pencilcase, x: 985, y: 400, done: "Estojo guardado!" },
+  { id: "book", image: OBJECTS.book, x: 480, y: 620, done: "Livro guardado!" },
 ];
 
 const BAG = { x: 700, y: 400 };
@@ -28,6 +29,7 @@ const BAG = { x: 700, y: 400 };
 /** Story beats: this activity closes the "at home" block. */
 const HELLO = ["Ufa! Quantas brincadeiras!", "Agora vamos guardar tudo na mochila?"];
 const OUTRO = ["Tudo pronto!", "Ainda falta arrumar o quarto!"];
+const INSTRUCTION = "Guarde tudo na minha mochila!";
 
 export function S05Backpack({
   onComplete,
@@ -38,13 +40,16 @@ export function S05Backpack({
 }) {
   const [stored, setStored] = useState<string[]>([]);
   const [active, setActive] = useState(false);
-  const { feedback, show } = useFeedback();
-  const { play } = useAudio();
   const [greeted, setGreeted] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
+  const [done, setDone] = useState(false);
+  const { feedback, show, isBusy } = useFeedback();
+  const { play } = useAudio();
 
-  const done = stored.length === ITEMS.length;
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, done, onComplete);
+  const ready = greeted && introDone && !done;
+  useInstructionSpeech(INSTRUCTION, ready && !isBusy, stored.length);
 
   return (
     <SceneFrame
@@ -79,6 +84,7 @@ export function S05Backpack({
             start={{ x: item.x, y: item.y }}
             size={SIZE}
             label={item.id}
+            disabled={isBusy}
             onPickup={() => play("pick")}
             onZoneChange={(zone) => setActive(zone === "bag")}
             onDrop={(zone) => {
@@ -90,7 +96,11 @@ export function S05Backpack({
               play("drop");
               const next = [...stored, item.id];
               setStored(next);
-              if (next.length < ITEMS.length) show(FEEDBACK.yes, "success", 1300);
+              /* Contextual feedback; the closing narration only starts
+                 after it finished talking. */
+              show(item.done, "success", undefined, () => {
+                if (next.length === ITEMS.length) setDone(true);
+              });
               return "stay";
             }}
           />
@@ -98,7 +108,7 @@ export function S05Backpack({
       )}
 
       <SpeechBubble
-        text={hello ?? outro ?? "Guarde tudo na minha mochila!"}
+        text={hello ?? outro ?? INSTRUCTION}
         anchorX={1140}
         anchorY={365}
         anchorWidth={200}
@@ -106,7 +116,12 @@ export function S05Backpack({
         width={300}
         tone={done ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos praticar o que aprendemos!", icon: UI.gestureDrop }]} />
+      {greeted && (
+        <SkillIntro
+          steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos praticar o que aprendemos!", icon: UI.gestureDrop }]}
+          onComplete={() => setIntroDone(true)}
+        />
+      )}
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );

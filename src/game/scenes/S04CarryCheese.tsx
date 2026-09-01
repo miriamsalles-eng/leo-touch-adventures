@@ -10,6 +10,7 @@ import { SceneFrame } from "../components/SceneFrame";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[3]!;
@@ -18,7 +19,15 @@ const PADDING = A.params!["zonePadding"] as number;
 
 /** Four rounds, one per direction: right, left, up and down. */
 /** Bridge to the sorting/rocket block of the story. */
-const OUTRO = ["Isso! Você soltou certinho!", "Estou adorando brincar com você!"];
+const OUTRO = ["Estou adorando brincar com você!"];
+
+/** Contextual success line for each round. */
+const SUCCESS = [
+  "Você trouxe o queijo até mim!",
+  "Conseguiu levar para a esquerda!",
+  "Chegou lá em cima!",
+  "Você soltou no lugar certo!",
+];
 
 const ROUNDS = [
   { item: { x: 300, y: 520 }, leo: { x: 1000, y: 620 }, hint: "Clique no queijo, segure e traga até mim!" },
@@ -37,14 +46,17 @@ export function S04CarryCheese({
   progress: { total: number; current: number };
 }) {
   const [round, setRound] = useState(0);
+  const [introDone, setIntroDone] = useState(false);
   const [step, setStep] = useState<Step>("idle");
   const [done, setDone] = useState(false);
-  const { feedback, show } = useFeedback();
+  const { feedback, show, isBusy } = useFeedback();
   const { play } = useAudio();
   const outro = useNarration(OUTRO, done, onComplete);
 
   const r = ROUNDS[round]!;
   const target = { x: r.leo.x, y: r.leo.y - 150 };
+  const ready = introDone && !isBusy && !done;
+  useInstructionSpeech(r.hint, ready && step === "idle", round);
 
   const bubble =
     outro ??
@@ -87,6 +99,7 @@ export function S04CarryCheese({
           start={r.item}
           size={SIZE}
           label="queijo"
+          disabled={isBusy}
           onPickup={() => {
             play("pick");
             setStep("holding");
@@ -100,13 +113,13 @@ export function S04CarryCheese({
             }
             play("success");
             if (round < ROUNDS.length - 1) {
-              show(round === 0 ? "Isso! Você arrastou!" : "Isso! Você soltou certinho!", "success", 2000);
               setStep("idle");
-              setRound((n) => n + 1);
+              /* The round only changes after its own feedback finished. */
+              show(SUCCESS[round] ?? SUCCESS[0]!, "success", undefined, () => setRound((n) => n + 1));
               return "return";
             }
             setStep("round-done");
-            setDone(true);
+            show(SUCCESS[ROUNDS.length - 1]!, "success", undefined, () => setDone(true));
             return { x: target.x, y: target.y };
           }}
         />
@@ -125,6 +138,7 @@ export function S04CarryCheese({
           { label: "Aprendendo: arrastar", text: "Agora vamos aprender a arrastar!", icon: UI.gestureDrag },
           { label: "Aprendendo: soltar", text: "E soltar no lugar certo!", icon: UI.gestureDrop },
         ]}
+        onComplete={() => setIntroDone(true)}
       />
       <RoundBadge current={done ? ROUNDS.length : round} total={ROUNDS.length} y={40} x={200} />
       <FeedbackPopup message={feedback} />
