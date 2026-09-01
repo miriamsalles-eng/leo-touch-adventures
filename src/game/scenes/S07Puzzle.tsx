@@ -9,6 +9,7 @@ import { SkillIntro } from "../components/SkillIntro";
 import { SpeechBubble } from "../components/SpeechBubble";
 import { FeedbackPopup, useFeedback } from "../components/FeedbackPopup";
 import { useNarration } from "../hooks/useNarration";
+import { useInstructionSpeech } from "../hooks/useInstructionSpeech";
 import { useAudio } from "../hooks/useAudio";
 
 const A = ACTIVITIES[6]!;
@@ -17,6 +18,13 @@ const SNAP = A.params!["zonePadding"] as number | undefined;
 /** Three big, recognizable rocket parts: nose, body and base with fins. */
 const HELLO = ["Vamos montar um foguete?"];
 const OUTRO = ["Nosso foguete ficou ótimo!", "Que tal um passeio no parque?"];
+const INSTRUCTION = "Leve cada peça para o lugar certo.";
+/** Contextual feedback for each rocket piece. */
+const PIECE_DONE: Record<string, string> = {
+  nose: "A ponta encaixou!",
+  body: "Mais uma peça no lugar!",
+  base: "Última peça no lugar!",
+};
 
 const PIECES = [
   { id: "nose", image: OBJECTS.rocketNose, start: { x: 240, y: 180 }, slot: { x: 800, y: 220 }, w: 210, h: 147 },
@@ -34,13 +42,15 @@ export function S07Puzzle({
   const [placed, setPlaced] = useState<string[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-  const { feedback, show } = useFeedback();
+  const { feedback, show, isBusy } = useFeedback();
   const { play } = useAudio();
 
   const [greeted, setGreeted] = useState(false);
-  const done = placed.length === PIECES.length;
+  const [introDone, setIntroDone] = useState(false);
+  const [done, setDone] = useState(false);
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, done, onComplete);
+  useInstructionSpeech(INSTRUCTION, greeted && introDone && !isBusy && !done, placed.length);
   const highlight = dragging || active !== null;
 
   return (
@@ -99,6 +109,7 @@ export function S07Puzzle({
             start={p.start}
             size={p.w}
             label={`peça ${p.id}`}
+            disabled={isBusy}
             onPickup={() => {
               setDragging(true);
               play("pick");
@@ -115,7 +126,9 @@ export function S07Puzzle({
               play("success");
               const next = [...placed, p.id];
               setPlaced(next);
-              if (next.length < PIECES.length) show(FEEDBACK.yes, "success");
+              show(PIECE_DONE[p.id] ?? "Peça no lugar!", "success", undefined, () => {
+                if (next.length === PIECES.length) setDone(true);
+              });
               return "stay";
             }}
           />
@@ -124,7 +137,7 @@ export function S07Puzzle({
 
       <Character state={done ? "celebrating" : "pointing"} x={1160} y={700} height={300} bob={!done} flip={!done} />
       <SpeechBubble
-        text={hello ?? outro ?? "Leve cada peça para o lugar certo."}
+        text={hello ?? outro ?? INSTRUCTION}
         anchorX={1165}
         anchorY={400}
         anchorWidth={200}
@@ -132,7 +145,12 @@ export function S07Puzzle({
         width={290}
         tone={done ? "cheer" : "normal"}
       />
-      <SkillIntro steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos montar um foguete!", icon: UI.gestureMove }]} />
+      {greeted && (
+        <SkillIntro
+          steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos montar um foguete!", icon: UI.gestureMove }]}
+          onComplete={() => setIntroDone(true)}
+        />
+      )}
       <FeedbackPopup message={feedback} />
     </SceneFrame>
   );
