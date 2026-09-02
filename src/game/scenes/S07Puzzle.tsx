@@ -50,7 +50,8 @@ export function S07Puzzle({
   const [done, setDone] = useState(false);
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, done, onComplete);
-  useInstructionSpeech(INSTRUCTION, greeted && introDone && !isBusy && !done, placed.length);
+  /* General activity instruction: spoken once, not after each piece. */
+  useInstructionSpeech(INSTRUCTION, greeted && introDone && !isBusy && !done, "puzzle-start");
   const highlight = dragging || active !== null;
 
   return (

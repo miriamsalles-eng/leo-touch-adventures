@@ -49,7 +49,9 @@ export function S05Backpack({
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, done, onComplete);
   const ready = greeted && introDone && !done;
-  useInstructionSpeech(INSTRUCTION, ready && !isBusy, stored.length);
+  /* General activity instruction: narrated once per activity, never again
+     after each item (it stays written in the bubble and replay still works). */
+  useInstructionSpeech(INSTRUCTION, ready && !isBusy, "backpack-start");
 
   return (
     <SceneFrame

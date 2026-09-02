@@ -47,7 +47,8 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
   const [done, setDone] = useState(false);
   const hello = useNarration(HELLO, !greeted, () => setGreeted(true));
   const outro = useNarration(OUTRO, done, onComplete);
-  useInstructionSpeech(INSTRUCTION, greeted && introDone && !isBusy && !done, placed.length);
+  /* General activity instruction: spoken once when the activity starts. */
+  useInstructionSpeech(INSTRUCTION, greeted && introDone && !isBusy && !done, "sorting-start");
 
   return (
     <SceneFrame background={BACKGROUNDS.bedroom} progress={progress}>
