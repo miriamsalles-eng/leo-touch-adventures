@@ -59,7 +59,9 @@ export function S11Picnic({
           ? "Agora me leve até a toalha!"
           : null,
     ready && phase !== "done",
-    `${phase}-${placed.length}`,
+    /* One narration per phase (the general instruction never repeats between
+       objects); only a genuinely new phase/round speaks again. */
+    phase,
   );
 
   const bubble =
