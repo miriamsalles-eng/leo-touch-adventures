@@ -43,19 +43,21 @@ export function S12Ending({ onRestart }: { onRestart: () => void }) {
 
       <Character state="celebrating" x={370} y={620} height={400} bob />
 
-      <h2 className="absolute left-[880px] top-[92px] -translate-x-1/2 text-center font-display text-[52px] text-[var(--primary-deep)] drop-shadow-[0_3px_0_rgba(255,255,255,0.9)]">
+      {/* Protected title band: fixed width keeps it on one line, clear of the bubble. */}
+      <h2 className="absolute left-[880px] top-[78px] w-[600px] -translate-x-1/2 text-center font-display text-[52px] leading-tight text-[var(--primary-deep)] drop-shadow-[0_3px_0_rgba(255,255,255,0.9)]">
         Que passeio divertido!
       </h2>
 
       <SpeechBubble
         text={line ?? LINES[LINES.length - 1]!}
         anchorX={370}
-        anchorY={250}
+        anchorY={288}
         anchorWidth={220}
         side="right"
-        width={430}
+        width={380}
         tone="cheer"
       />
+
 
       {/* Secondary strip: the skills learned, small and at the bottom */}
       <div className="absolute left-[880px] top-[470px] flex -translate-x-1/2 -translate-y-1/2 items-center gap-4 rounded-[30px] bg-card/85 px-6 py-3 shadow-[var(--shadow-soft)]">
