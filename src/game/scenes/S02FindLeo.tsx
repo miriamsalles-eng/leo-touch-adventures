@@ -21,7 +21,7 @@ const DWELL = A.params!["dwellMs"] as number;
  * buttons or progress bar). Leo only moves AFTER the child reaches him.
  */
 const ROUNDS = [
-  { x: 640, y: 540, hint: "Leve a setinha até mim!" },
+  { x: 640, y: 540, hint: "Mova a setinha e me encontre!" },
   { x: 300, y: 520, hint: "Agora me encontre aqui!" },
   { x: 990, y: 540, hint: "Agora me encontre aqui!" },
   { x: 640, y: 400, hint: "Agora me encontre aqui!" },
@@ -111,7 +111,9 @@ export function S02FindLeo({
       />
       {started && (
         <SkillIntro
-          steps={[{ label: "Aprendendo: mover", text: "Agora vamos aprender a mover a setinha!", icon: UI.gestureMove }]}
+          steps={[
+            { label: "Aprendendo: mover", text: "Agora vamos aprender a mover a setinha!", icon: UI.gestureMove },
+          ]}
           onComplete={() => setIntroDone(true)}
         />
       )}
