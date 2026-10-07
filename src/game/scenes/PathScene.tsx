@@ -149,7 +149,9 @@ export function PathScene({
         anchorX={bubbleAnchor.x}
         anchorY={Math.max(bubbleAnchor.y - leoSize, 150)}
         anchorWidth={leoSize}
-        side="above"
+        /* At the goal (near the top-right corner) "above" would hit the sound
+           button, so the arrival bubble picks the free side next to Leo. */
+        side={done ? "auto" : "above"}
         width={340}
         tone={done ? "cheer" : "normal"}
       />
