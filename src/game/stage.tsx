@@ -65,7 +65,7 @@ export function Stage({ children }: { children: ReactNode }) {
       >
         <div
           ref={stageRef}
-          className="relative shrink-0 grow-0 overflow-hidden rounded-[var(--stage-radius)] bg-background shadow-[var(--shadow-stage)]"
+          className="relative uppercase shrink-0 grow-0 overflow-hidden rounded-[var(--stage-radius)] bg-background shadow-[var(--shadow-stage)]"
           style={{
             width: STAGE_W,
             height: STAGE_H,
