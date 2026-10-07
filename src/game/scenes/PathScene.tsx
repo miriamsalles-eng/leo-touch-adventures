@@ -81,6 +81,10 @@ export function PathScene({
   /* Instruction speaks only after the prelude and the skill banner. */
   useInstructionSpeech(hint, ready && introDone && !done, 0);
 
+  /* While walking the bubble stays at the trail start; once Leo arrives it
+     follows him to the goal so the success/outro lines sit next to him. */
+  const bubbleAnchor = done ? goal : start;
+
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   return (
@@ -142,8 +146,8 @@ export function PathScene({
 
       <SpeechBubble
         text={preludeLine ?? outroLine ?? (done ? successText : hint)}
-        anchorX={start.x}
-        anchorY={Math.max(start.y - leoSize, 150)}
+        anchorX={bubbleAnchor.x}
+        anchorY={Math.max(bubbleAnchor.y - leoSize, 150)}
         anchorWidth={leoSize}
         side="above"
         width={340}

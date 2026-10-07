@@ -28,7 +28,7 @@ const BLANKET = { x: 640, y: 430 };
 const LEO_SPOT = { x: 400, y: 560 };
 
 const HELLO = ["Agora vamos organizar nosso piquenique?"];
-const OUTRO = ["Nosso piquenique está pronto!", "Conseguimos!"];
+const OUTRO = ["Nosso piquenique está pronto!"];
 
 type Phase = "click" | "fill" | "walk" | "done";
 
@@ -165,7 +165,9 @@ export function S11Picnic({
                 const next = [...placed, f.id];
                 setPlaced(next);
                 if (next.length === FOODS.length) {
-                  show("Tudo pronto para o piquenique!", "success", undefined, () => setPhase("walk"));
+                  /* The last food gets its own specific line; "piquenique
+                     pronto" is reserved for when Leo reaches the blanket. */
+                  show(f.done, "success", undefined, () => setPhase("walk"));
                 } else {
                   show(f.done, "success");
                 }

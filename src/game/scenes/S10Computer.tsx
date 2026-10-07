@@ -17,7 +17,7 @@ const A = ACTIVITIES[9]!;
 const SIZE = A.params!["itemSize"] as number;
 const PADDING = A.params!["zonePadding"] as number;
 
-const HELLO = ["Vamos guardar as fotos do passeio?"];
+const HELLO = ["Vamos guardar uma foto do passeio?"];
 const OUTRO = ["Tudo organizado!", "Agora vamos fazer um piquenique?"];
 
 type Phase = "mute" | "unmute" | "file" | "done";
@@ -78,7 +78,7 @@ export function S10Computer({ onComplete, progress }: { onComplete: () => void; 
     <SceneFrame
       gradient="linear-gradient(160deg, var(--desk-1), var(--desk-2) 55%, var(--desk-3))"
       progress={progress}
-      highlightAudio={phase === "mute" || phase === "unmute"}
+      highlightAudio={phase === "unmute" && muted ? "strong" : phase === "mute" || phase === "unmute"}
     >
       <div className="pointer-events-none absolute inset-x-[70px] top-[70px] h-[560px] rounded-[44px] border-[10px] border-card bg-white/45" />
 

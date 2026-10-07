@@ -170,7 +170,38 @@
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.85)) drop-shadow(0 10px 14px rgba(20, 60, 80, 0.28));
 }
 
+/** Strong, opaque call-to-action pulse for the sound button when the sound is
+    off: the icon never fades, a bright halo keeps expanding around it. */
+@keyframes audio-call {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 6px var(--highlight),
+      0 0 0 6px var(--highlight-soft),
+      var(--shadow-soft);
+  }
+  50% {
+    transform: scale(1.14);
+    box-shadow:
+      0 0 0 6px var(--highlight),
+      0 0 0 24px var(--highlight-soft),
+      var(--shadow-soft);
+  }
+}
+
+.animate-audio-call {
+  animation: audio-call 1.1s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-audio-call {
+    animation: none;
+    box-shadow:
+      0 0 0 6px var(--highlight),
+      0 0 0 18px var(--highlight-soft),
+      var(--shadow-soft);
+  }
   .animate-leo-bob,
   .animate-pop-in,
   .animate-wiggle,

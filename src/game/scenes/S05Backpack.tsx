@@ -28,7 +28,7 @@ const BAG = { x: 700, y: 400 };
 
 /** Story beats: this activity closes the "at home" block. */
 const HELLO = ["Ufa! Quantas brincadeiras!", "Agora vamos guardar tudo na mochila?"];
-const OUTRO = ["Tudo pronto!", "Ainda falta arrumar o quarto!"];
+const OUTRO = ["Mochila pronta!", "Agora falta arrumar o quarto!"];
 const INSTRUCTION = "Guarde tudo na minha mochila!";
 
 export function S05Backpack({
