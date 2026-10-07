@@ -22,7 +22,7 @@ import { S12Ending } from "./scenes/S12Ending";
  * query params): every reload starts a brand new session at the cover.
  */
 function Flow() {
-  const [step, setStep] = useState(Number(globalThis.__QA_STEP ?? 0)); // QA_TEMP
+  const [step, setStep] = useState(0);
   /** Remounts every scene on RECOMEÇAR, clearing all internal round state. */
   const [session, setSession] = useState(0);
   const { start, setMuted } = useAudio();
