@@ -57,6 +57,10 @@ export function S04CarryCheese({
   const target = { x: r.leo.x, y: r.leo.y - 150 };
   const ready = introDone && !isBusy && !done;
   useInstructionSpeech(r.hint, ready && step === "idle", round);
+  /* "Agora solte aqui!" is narrated once per round, the first time the
+     cheese enters the target. Leaving and re-entering does not repeat it
+     (same key); the bubble's replay button still repeats it on demand. */
+  useInstructionSpeech("Agora solte aqui!", ready && step === "over", `release-${round}`);
 
   const bubble =
     outro ??

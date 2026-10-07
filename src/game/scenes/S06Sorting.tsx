@@ -33,7 +33,7 @@ const ZONES = [
 ];
 
 const HELLO = ["Cada coisa tem o seu lugar!"];
-const OUTRO = ["Que quarto arrumado!", "Estou animado! Vamos montar um foguete?"];
+const OUTRO = ["Que quarto arrumado!"];
 const INSTRUCTION = "Coloque cada coisa no seu lugar.";
 
 /** Activity 5 — four clearly distinct, large targets. */

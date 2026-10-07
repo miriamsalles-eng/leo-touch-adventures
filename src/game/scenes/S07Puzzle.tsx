@@ -148,7 +148,7 @@ export function S07Puzzle({
       />
       {greeted && (
         <SkillIntro
-          steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos montar um foguete!", icon: UI.gestureMove }]}
+          steps={[{ label: "Praticando: arrastar e soltar", text: "Vamos praticar arrastar e soltar!", icon: UI.gestureMove }]}
           onComplete={() => setIntroDone(true)}
         />
       )}

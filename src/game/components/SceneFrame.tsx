@@ -14,7 +14,9 @@ export type SceneFrameProps = {
   /** Standard SEGUIR button — always in the same place on every scene. */
   onNext?: (() => void) | undefined;
   /** Discreetly pulses the sound button (used by the computer activity). */
-  highlightAudio?: boolean | undefined;
+  /** `true` = gentle highlight; `"strong"` = unmistakable call to press the
+   *  button (used when the sound is off and the voice cannot guide). */
+  highlightAudio?: boolean | "strong" | undefined;
   /**
    * Slightly calms the illustrated scenery (saturation/contrast) so the
    * manipulable objects and Leo stand out. The background keeps its art —
@@ -67,7 +69,9 @@ export function SceneFrame({
           toggleMute();
         }}
         className={`absolute right-6 top-6 z-40 grid h-[68px] w-[68px] place-items-center rounded-full border-4 bg-card/90 shadow-[var(--shadow-soft)] transition-transform hover:scale-105 ${
-          highlightAudio
+          highlightAudio === "strong"
+            ? "animate-audio-call border-[var(--highlight)]"
+            : highlightAudio
             ? "animate-pulse border-[var(--highlight)] ring-8 ring-[var(--highlight-soft)]/60"
             : "border-card"
         }`}

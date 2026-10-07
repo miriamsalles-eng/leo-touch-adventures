@@ -31,7 +31,7 @@ const ROUNDS = [
 const SUCCESS = ["Você me encontrou!", "Conseguiu de novo!", "Achou onde eu estava!"];
 
 /** Leo introduces himself before the very first practice. */
-const HELLO = ["Oi! Eu sou o Leo! Vamos brincar?", "Eu vou mudar de lugar. Leve a setinha até mim!"];
+const HELLO = ["Oi! Eu sou o Leo! Vamos brincar?"];
 /** Narrative bridge to the clicking activity — no extra screen, no extra click. */
 const OUTRO = ["Nossa! Você me encontrou todas as vezes!", "Agora vou pedir um objeto. Quando encontrar, clique nele!"];
 
