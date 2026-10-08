@@ -206,6 +206,7 @@ function pump() {
   const finish = () => {
     /* Only the request that is actually speaking may finish itself. */
     if (active !== req) return;
+    duck(false);
     active = null;
     if (safety) clearTimeout(safety);
     safety = null;
@@ -222,6 +223,7 @@ function pump() {
   safety = setTimeout(finish, estimateMs(req.text) * 2);
 
   try {
+    duck(true);
     synth!.speak(u);
   } catch {
     finish();
@@ -243,11 +245,11 @@ function playMp3(req: Request) {
   const el = getMp3(req.url!);
   const fallback = (why: unknown) => {
     if (active !== req) return;
-    console.error("[voice] MP3 falhou, usando voz nativa:", req.url, why);
+    console.error("[LeoVoice] MP3 failed, falling back to TTS:", req.url, why);
     stopMp3();
     /* Same line, same id, now through SpeechSynthesis — never both. */
     active = null;
-    queue.unshift({ ...req, url: null });
+    queue.unshift({ ...req, url: null, tts: true });
     pump();
   };
   const start = () => {
@@ -360,7 +362,7 @@ export const speech = {
       finished.add(id);
       return id;
     }
-    queue.push({ id, text, standalone: false, deferred: null, url: voiceFor(text) });
+    queue.push({ id, text, standalone: false, deferred: null, url: voiceFor(text), tts: false });
     pump();
     return id;
   },
@@ -371,6 +373,10 @@ export const speech = {
    */
   replay(text: string) {
     if (!text) return;
+    /* Replay só existe para falas com MP3; mensagens somente visuais não
+       têm o que repetir (o botão de replay também é ocultado nelas). */
+    const url = voiceFor(text);
+    if (!url) return;
     const interrupted = active;
     if (interrupted) {
       active = null;
