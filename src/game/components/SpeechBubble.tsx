@@ -1,6 +1,7 @@
 import { STAGE_H, STAGE_W } from "../stage";
 import { UI } from "../assets";
 import { speech } from "../speech";
+import { voiceFor } from "../audio/voiceMap";
 
 export type BubbleSide = "auto" | "left" | "right" | "above";
 
@@ -119,18 +120,22 @@ export function SpeechBubble({
         style={{ borderColor: border }}
       >
         <p className="font-display text-[27px] leading-tight text-foreground">{text}</p>
-        <button
-          type="button"
-          aria-label="Ouvir novamente"
-          className="pointer-events-auto absolute -bottom-4 -right-3 grid h-[46px] w-[46px] place-items-center rounded-full border-4 border-card bg-card shadow-[var(--shadow-soft)] transition-transform hover:scale-110"
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            speech.replay(text);
-          }}
-        >
-          <img src={UI.soundOn} alt="" className="h-7 w-7" />
-        </button>
+        {/* Replay só existe para falas com voz gravada; mensagens somente
+            visuais não exibem o botão. */}
+        {voiceFor(text) && (
+          <button
+            type="button"
+            aria-label="Ouvir novamente"
+            className="pointer-events-auto absolute -bottom-4 -right-3 grid h-[46px] w-[46px] place-items-center rounded-full border-4 border-card bg-card shadow-[var(--shadow-soft)] transition-transform hover:scale-110"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              speech.replay(text);
+            }}
+          >
+            <img src={UI.soundOn} alt="" className="h-7 w-7" />
+          </button>
+        )}
         <span
           className="absolute block"
           style={{ ...tailStyle, clipPath: tailPath, backgroundColor: border }}
