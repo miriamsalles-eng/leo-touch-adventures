@@ -41,8 +41,10 @@ type Request = {
   standalone: boolean;
   /** Request whose waiters were postponed because a replay interrupted it. */
   deferred: number | null;
-  /** Recorded MP3 for this line (pilot), or null → SpeechSynthesis. */
+  /** Recorded MP3 for this line, or null → mensagem somente visual. */
   url: string | null;
+  /** True only on the technical fallback after an essential MP3 failed. */
+  tts: boolean;
 };
 
 const synth: SpeechSynthesis | null =
@@ -169,6 +171,17 @@ function pump() {
 
   if (req.url && enabled && !muted && typeof Audio !== "undefined") {
     playMp3(req);
+    return;
+  }
+
+  /* Linhas sem MP3 são SOMENTE VISUAIS: resolvem na hora e os tempos
+     mínimos de leitura assumem. SpeechSynthesis NUNCA as narra — o TTS só
+     entra como fallback técnico (req.tts) quando um MP3 essencial falha. */
+  if (!req.tts) {
+    active = null;
+    resolve(req.id);
+    if (req.deferred !== null) resolve(req.deferred);
+    pump();
     return;
   }
 
