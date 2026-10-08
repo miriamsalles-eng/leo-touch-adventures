@@ -78,11 +78,10 @@ export function SkillIntro({
   return (
     <div
       key={index}
-      className="pointer-events-none absolute left-1/2 top-[44px] z-40 flex -translate-x-1/2 -translate-y-1/2 animate-pop-in items-center gap-3 rounded-full border-4 border-card bg-card/95 px-7 py-2 shadow-[var(--shadow-soft)]"
+      className="pointer-events-none absolute left-1/2 top-[44px] z-40 flex -translate-x-1/2 -translate-y-1/2 animate-pop-in items-center rounded-full border-4 border-card bg-card/95 px-9 py-2 shadow-[var(--shadow-soft)]"
       aria-live="polite"
     >
-      {step.icon && <img src={step.icon} alt="" className="h-[42px] w-[42px] object-contain" />}
-      <div className="flex flex-col items-start leading-tight">
+      <div className="flex flex-col items-center leading-tight">
         {step.label && (
           <span className="whitespace-nowrap font-display text-[15px] uppercase tracking-wide text-[var(--secondary-deep)] opacity-80">
             {step.label}
