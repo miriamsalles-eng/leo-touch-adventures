@@ -29,6 +29,8 @@ export const TIMING = {
   FEEDBACK_POST_SPEECH_DELAY: 800,
 } as const;
 
+import { PRELOAD_IDS, VOICE_MAP, voiceFor } from "./audio/voiceMap";
+
 type Waiter = () => void;
 
 /** One speech request. `id` — never the text — identifies it. */
@@ -39,6 +41,8 @@ type Request = {
   standalone: boolean;
   /** Request whose waiters were postponed because a replay interrupted it. */
   deferred: number | null;
+  /** Recorded MP3 for this line (pilot), or null → SpeechSynthesis. */
+  url: string | null;
 };
 
 const synth: SpeechSynthesis | null =
@@ -55,6 +59,50 @@ let queue: Request[] = [];
 const finished = new Set<number>();
 const waiters = new Map<number, Set<Waiter>>();
 let safety: ReturnType<typeof setTimeout> | null = null;
+
+/* ---------- Recorded voice (HTMLAudioElement) ---------- */
+const mp3Cache = new Map<string, HTMLAudioElement>();
+let voiceEl: HTMLAudioElement | null = null;
+let voiceDelay: ReturnType<typeof setTimeout> | null = null;
+let lastSfxAt = 0;
+/** Gap kept between a sound effect and the first word of a recorded line. */
+const SFX_GAP = 200;
+const duckListeners = new Set<(on: boolean) => void>();
+function duck(on: boolean) {
+  duckListeners.forEach((cb) => {
+    try {
+      cb(on);
+    } catch {
+      /* ignore */
+    }
+  });
+}
+function getMp3(url: string) {
+  let el = mp3Cache.get(url);
+  if (!el) {
+    el = new Audio();
+    el.preload = "auto";
+    el.src = url;
+    mp3Cache.set(url, el);
+  }
+  return el;
+}
+function stopMp3() {
+  if (voiceDelay) clearTimeout(voiceDelay);
+  voiceDelay = null;
+  const el = voiceEl;
+  voiceEl = null;
+  if (!el) return;
+  el.onended = null;
+  el.onerror = null;
+  try {
+    el.pause();
+    el.currentTime = 0;
+  } catch {
+    /* ignore */
+  }
+  duck(false);
+}
 
 function loadVoices() {
   if (!synth) return;
@@ -119,6 +167,11 @@ function pump() {
   if (!req) return;
   active = req;
 
+  if (req.url && enabled && !muted && typeof Audio !== "undefined") {
+    playMp3(req);
+    return;
+  }
+
   if (!canSpeak()) {
     /* No voice: the request resolves at once and the minimum reading
        times take over. Never block the activity. */
@@ -162,6 +215,55 @@ function pump() {
   }
 }
 
+/** Ends the active request and moves on (shared by MP3 and TTS paths). */
+function finishReq(req: Request) {
+  if (active !== req) return;
+  active = null;
+  if (safety) clearTimeout(safety);
+  safety = null;
+  resolve(req.id);
+  if (req.deferred !== null) resolve(req.deferred);
+  pump();
+}
+
+function playMp3(req: Request) {
+  const el = getMp3(req.url!);
+  const fallback = (why: unknown) => {
+    if (active !== req) return;
+    console.error("[voice] MP3 falhou, usando voz nativa:", req.url, why);
+    stopMp3();
+    /* Same line, same id, now through SpeechSynthesis — never both. */
+    active = null;
+    queue.unshift({ ...req, url: null });
+    pump();
+  };
+  const start = () => {
+    voiceDelay = null;
+    if (active !== req) return;
+    voiceEl = el;
+    el.onended = () => {
+      if (active !== req) return;
+      el.onended = null;
+      el.onerror = null;
+      voiceEl = null;
+      duck(false);
+      finishReq(req);
+    };
+    el.onerror = () => fallback(el.error);
+    try {
+      el.currentTime = 0;
+    } catch {
+      /* ignore */
+    }
+    duck(true);
+    const p = el.play();
+    if (p && typeof p.catch === "function") p.catch((e) => fallback(e));
+  };
+  const wait = SFX_GAP - (Date.now() - lastSfxAt);
+  if (wait > 0) voiceDelay = setTimeout(start, wait);
+  else start();
+}
+
 function stopSynth() {
   if (!synth) return;
   try {
@@ -182,6 +284,24 @@ export const speech = {
   /** Called by the first user gesture so browsers allow playback. */
   enable() {
     enabled = true;
+    /* Light preload: only the first activity's recorded lines. */
+    if (typeof Audio !== "undefined") {
+      for (const id of PRELOAD_IDS) {
+        const url = VOICE_MAP[id];
+        if (url) getMp3(url);
+      }
+    }
+  },
+  /** A sound effect just played: a recorded line waits a short gap. */
+  noteSfx() {
+    lastSfxAt = Date.now();
+  },
+  /** Music ducking: called with true while a recorded line is playing. */
+  onVoiceActivity(cb: (on: boolean) => void): () => void {
+    duckListeners.add(cb);
+    return () => {
+      duckListeners.delete(cb);
+    };
   },
   setMuted(value: boolean) {
     if (muted === value) return;
@@ -202,6 +322,7 @@ export const speech = {
     if (safety) clearTimeout(safety);
     safety = null;
     stopSynth();
+    stopMp3();
     for (const req of pending) {
       if (release) {
         resolve(req.id);
@@ -226,7 +347,7 @@ export const speech = {
       finished.add(id);
       return id;
     }
-    queue.push({ id, text, standalone: false, deferred: null });
+    queue.push({ id, text, standalone: false, deferred: null, url: voiceFor(text) });
     pump();
     return id;
   },
@@ -243,12 +364,14 @@ export const speech = {
       if (safety) clearTimeout(safety);
       safety = null;
       stopSynth();
+      stopMp3();
     }
     queue.unshift({
       id: nextId++,
       text,
       standalone: true,
       deferred: interrupted ? interrupted.id : null,
+      url: voiceFor(text),
     });
     pump();
   },
