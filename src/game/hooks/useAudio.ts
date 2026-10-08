@@ -13,6 +13,9 @@ type AudioCtx = {
   play: (key: AudioKey) => void;
 };
 
+const MUSIC_VOLUME = 0.16;
+const MUSIC_DUCKED = 0.05;
+
 const Ctx = createContext<AudioCtx | null>(null);
 
 /**
@@ -43,7 +46,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     if (!music.current) {
       const el = new Audio(MUSIC);
       el.loop = true;
-      el.volume = 0.16;
+      el.volume = MUSIC_VOLUME;
       music.current = el;
     }
     const el = music.current;
@@ -53,6 +56,30 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       void el.play().catch(() => {});
     }
   }, [started, muted]);
+
+  /* Ducking: music fades 0.16 → 0.05 while a recorded Leo line plays, then
+     back, in ~300 ms. The configured volume itself never changes. */
+  useEffect(() => {
+    let raf = 0;
+    const fade = (to: number) => {
+      const el = music.current;
+      if (!el) return;
+      cancelAnimationFrame(raf);
+      const from = el.volume;
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const k = Math.min(1, (t - t0) / 300);
+        if (music.current) music.current.volume = from + (to - from) * k;
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    const off = speech.onVoiceActivity((on) => fade(on ? MUSIC_DUCKED : MUSIC_VOLUME));
+    return () => {
+      off();
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useEffect(
     () => () => {
@@ -74,6 +101,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           cache.current.set(key, el);
         }
         el.currentTime = 0;
+        speech.noteSfx();
         void el.play().catch(() => {});
       } catch {
         /* audio is optional */
