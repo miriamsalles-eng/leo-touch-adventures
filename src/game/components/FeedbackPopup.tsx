@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { STAGE_W } from "../stage";
 import { TIMING, speech } from "../speech";
+import { voiceFor } from "../audio/voiceMap";
 
 export type FeedbackTone = "success" | "gentle";
 export type FeedbackMessage = { text: string; tone: FeedbackTone } | null;
@@ -32,15 +33,23 @@ export function useFeedback() {
       /* The child already acted: any instruction still talking became
          useless, so the feedback may take the voice immediately. */
       speech.cancel({ release: true });
-      const id = speech.speak(text);
-      unsubscribe.current = speech.onEnd(id, () => {
-        const wait = Math.max(TIMING.FEEDBACK_POST_SPEECH_DELAY, min - (Date.now() - startedAt));
-        timer.current = setTimeout(() => {
-          setFeedback(null);
-          busy.current = false;
-          onDone?.();
-        }, wait);
-      });
+      const finish = () => {
+        setFeedback(null);
+        busy.current = false;
+        onDone?.();
+      };
+      if (voiceFor(text)) {
+        /* Feedback COM voz oficial: fica visível durante toda a narração. */
+        const id = speech.speak(text);
+        unsubscribe.current = speech.onEnd(id, () => {
+          const wait = Math.max(TIMING.FEEDBACK_POST_SPEECH_DELAY, min - (Date.now() - startedAt));
+          timer.current = setTimeout(finish, wait);
+        });
+      } else {
+        /* Feedback SOMENTE VISUAL (positivos simples): nenhum MP3, nenhum
+           TTS — apenas o texto e o tempo mínimo de leitura. */
+        timer.current = setTimeout(finish, min);
+      }
     },
     [],
   );

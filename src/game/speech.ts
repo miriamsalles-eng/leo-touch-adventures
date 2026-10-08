@@ -390,7 +390,8 @@ export const speech = {
       text,
       standalone: true,
       deferred: interrupted ? interrupted.id : null,
-      url: voiceFor(text),
+      url,
+      tts: false,
     });
     pump();
   },
