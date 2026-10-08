@@ -103,7 +103,7 @@ export function S04CarryCheese({
           start={r.item}
           size={SIZE}
           label="queijo"
-          disabled={isBusy}
+          disabled={isBusy || !introDone}
           onPickup={() => {
             play("pick");
             setStep("holding");
