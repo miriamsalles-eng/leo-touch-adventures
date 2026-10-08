@@ -62,7 +62,7 @@ const SUCCESS = [
 ];
 
 /** Bridge into the dragging activity. */
-const OUTRO = ["Você encontrou os objetos!", "Agora pode me ajudar a pegá-los?"];
+const OUTRO = ["Você encontrou os objetos!"];
 
 export function S03ClickCheese({
   onComplete,
@@ -83,7 +83,7 @@ export function S03ClickCheese({
   useInstructionSpeech(r.hint, ready, round);
 
   const press = (item: Item) => {
-    if (done || isBusy) return;
+    if (!ready) return;
     if (!item.correct) {
       play("oops");
       show(FEEDBACK.almost, "gentle");
@@ -120,7 +120,7 @@ export function S03ClickCheese({
               e.preventDefault();
               press(item);
             }}
-            className="absolute animate-pop-in rounded-full transition-transform duration-150 hover:scale-110 focus-visible:outline-4"
+            className={`absolute animate-pop-in rounded-full ${ready ? "" : "pointer-events-none"} transition-transform duration-150 hover:scale-110 focus-visible:outline-4`}
             style={{ left: item.x, top: item.y, width: SIZE, height: SIZE, transform: "translate(-50%, -50%)" }}
           >
             <img src={item.image} alt="" draggable={false} className="obj-halo h-full w-full object-contain" />

@@ -110,7 +110,7 @@ export function S07Puzzle({
             start={p.start}
             size={p.w}
             label={`peça ${p.id}`}
-            disabled={isBusy}
+            disabled={isBusy || !greeted || !introDone}
             onPickup={() => {
               setDragging(true);
               play("pick");

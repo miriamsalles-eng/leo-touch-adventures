@@ -86,7 +86,7 @@ export function S05Backpack({
             start={{ x: item.x, y: item.y }}
             size={SIZE}
             label={item.id}
-            disabled={isBusy}
+            disabled={isBusy || !ready}
             onPickup={() => play("pick")}
             onZoneChange={(zone) => setActive(zone === "bag")}
             onDrop={(zone) => {

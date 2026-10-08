@@ -23,6 +23,8 @@ export type SceneFrameProps = {
    * only its intensity drops a little. Leo and objects stay at 100%.
    */
   focus?: boolean | undefined;
+  /** Ignores presses on the sound button (S10 before its instruction). */
+  audioControlDisabled?: boolean | undefined;
   /** Hide the scene veil (used by the cover, which is already art-directed). */
   plain?: boolean | undefined;
 };
@@ -41,6 +43,7 @@ export function SceneFrame({
   onNext,
   highlightAudio = false,
   focus = false,
+  audioControlDisabled = false,
   plain = false,
 }: SceneFrameProps) {
   const { muted, toggleMute } = useAudio();
@@ -66,6 +69,7 @@ export function SceneFrame({
         aria-label={muted ? "Ativar som" : "Desativar som"}
         onPointerDown={(e) => {
           e.preventDefault();
+          if (audioControlDisabled) return;
           toggleMute();
         }}
         className={`absolute right-6 top-6 z-40 grid h-[68px] w-[68px] place-items-center rounded-full border-4 bg-card/90 shadow-[var(--shadow-soft)] transition-transform hover:scale-105 ${

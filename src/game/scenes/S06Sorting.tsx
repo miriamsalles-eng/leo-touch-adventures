@@ -100,7 +100,7 @@ export function S06Sorting({ onComplete, progress }: { onComplete: () => void; p
           start={p.start}
           size={SIZE}
           label={p.label}
-          disabled={isBusy}
+          disabled={isBusy || !greeted || !introDone}
           onPickup={() => play("pick")}
           onZoneChange={setOver}
           onDrop={(zone) => {

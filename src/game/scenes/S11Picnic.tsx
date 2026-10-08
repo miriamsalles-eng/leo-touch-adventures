@@ -102,7 +102,7 @@ export function S11Picnic({
           aria-label="Abrir a cesta"
           onPointerDown={(e) => {
             e.preventDefault();
-            if (isBusy) return;
+            if (!ready) return;
             play("click");
             /* The food instruction only starts after this feedback ended. */
             show("A cesta abriu!", "success", undefined, () => setPhase("fill"));
@@ -152,7 +152,7 @@ export function S11Picnic({
               start={{ x: f.x, y: f.y }}
               size={SIZE}
               label={f.id}
-              disabled={isBusy}
+              disabled={!ready}
               onPickup={() => play("pick")}
               onZoneChange={(zone) => setActive(zone === "blanket")}
               onDrop={(zone) => {
